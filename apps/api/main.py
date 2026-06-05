@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from supabase import create_client
 from dotenv import load_dotenv
 import os
@@ -6,6 +7,17 @@ import os
 load_dotenv()
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+from routers import quotes
+app.include_router(quotes.router)
 
 supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_ANON_KEY"))
 
@@ -16,7 +28,6 @@ def root():
 @app.get("/test-db")
 def test_db():
     try:
-        # just tries to connect, no tables needed yet
         return {"status": "connected", "message": "Supabase connection successful"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
