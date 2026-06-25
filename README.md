@@ -11,7 +11,7 @@ A no-code AI workflow builder that lets non-technical merchants design and deplo
 - **Frontend:** Next.js, React Flow, Zustand, Tailwind CSS
 - **Backend:** FastAPI (Python)
 - **Database:** Supabase (PostgreSQL)
-- **AI Models:** GPT-4o Mini, Gemini 1.5 Flash, Claude Haiku
+- **AI Models:** GPT-4o Mini, Claude Haiku
 - **Messaging:** Twilio WhatsApp API
 
 ## Project Structure
@@ -25,7 +25,7 @@ ws-workflow-builder-fyp/
 
 ## Status
 
-🟡 FYP1 complete (proof-of-concept). FYP2 in progress — full integration and evaluation.
+🟡 FYP1 complete (proof-of-concept). FYP2 in progress full integration and evaluation.
 
 ## Supervisor
 
