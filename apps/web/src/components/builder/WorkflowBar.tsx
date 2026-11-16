@@ -2,6 +2,7 @@
 
 import { useReactFlow } from '@xyflow/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import AccountMenu from '@/components/auth/AccountMenu'
 import { DEFAULT_WORKFLOW_NAME, useBuilderStore } from '@/lib/workflow/builderStore'
 import {
   createWorkflow,
@@ -191,6 +192,9 @@ export default function WorkflowBar() {
         >
           {busy ? 'Working…' : 'Save'}
         </button>
+        <div className="ml-2 border-l border-slate-200 pl-3">
+          <AccountMenu beforeLogout={confirmDiscard} />
+        </div>
       </div>
     </div>
   )

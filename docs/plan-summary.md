@@ -124,13 +124,14 @@ Runtime flow (FYP2 target):
 - **Out of scope:** payments and voice messages.
 - **Cost:** per-call VLM costs cap the dataset size.
 
-## FYP2 progress and to-do (as of 2026-11-16)
+## FYP2 progress and to-do (as of 2026-11-17)
 
 ### Done
 - Settings form for every node type, with the config saved in the workflow JSON (`{version: 1, nodes, edges}`). Condition branches and the Quote node's quoted/escalated exits are separate edge handles.
 - Builder state in Zustand (`src/lib/workflow/builderStore.ts`)
 - Rubrics can be saved from `/quotes` and picked in a Quote node
 - Workflow bar: name, open saved workflows, save/update in place, save as copy, unsaved-change warnings, `?id=` in the URL
+- Merchant accounts: email/password login (`/login`), one `merchants` row per account, RLS on `merchants` and `workflows`, and the API identifies the merchant from the login token (all quote endpoints require login)
 - Supabase schema for the quote engine in `supabase/migrations/`: `rubrics`, `quote_assessments` (backend-only via RLS), and the private `quote-images` bucket. Photos are stored by path.
 
 ### Alignment tasks (small)
@@ -138,10 +139,9 @@ Runtime flow (FYP2 target):
 - Make GPT-4o Mini the default model, and align the `MODEL_LABELS` display names with the model IDs actually called. Check for deprecated model IDs.
 - Support price *ranges* per rubric level (FR2.2).
 - Agree the Condition node's intent names (currently placeholders like `booking`, `quote_request`) with Wang Ruoxu's NLU module.
-- Add RLS policies for `workflows`. It's written from the browser with the anon key, so policies should restrict rows to the logged-in merchant once auth exists.
+- Optional: email confirmation and Google sign-in (both can be switched on in Supabase later).
 
 ### To build
-- Merchant auth and accounts, replacing `PLACEHOLDER_MERCHANT_ID`
 - The translation layer and workflow runtime engine (Obj 5), the core contribution
 - The Twilio WhatsApp webhook and send/receive (FR1.3, FR2.1 via WhatsApp)
 - A human escalation queue or UI
@@ -150,8 +150,7 @@ Runtime flow (FYP2 target):
 - Integration with NLU and scheduling (Wang Ruoxu's modules)
 
 ### Suggested order
-1. Merchant auth (Supabase Auth) with RLS on all merchant tables
-2. The translation layer and runtime engine, tested with a mock message endpoint first
-3. The Twilio sandbox webhook, with photos routed to `/api/quotes/assess`
-4. The evaluation harness (independent, so it can run in parallel)
-5. The alignment tasks above
+1. The translation layer and runtime engine, tested with a mock message endpoint first
+2. The Twilio sandbox webhook, with photos routed to the quote engine
+3. The evaluation harness (independent, so it can run in parallel)
+4. The alignment tasks above

@@ -1,9 +1,9 @@
 import { supabase } from '@/lib/supabase'
-import { PLACEHOLDER_MERCHANT_ID } from '@/lib/merchant'
 import type { WorkflowJson } from './types'
 
 // All reads/writes of the `workflows` table go through here. They run in the browser
-// with the anon key, so scoping by merchant is only a filter until auth + RLS exist.
+// as the logged-in merchant: RLS limits every query to that merchant's own rows, and
+// merchant_id defaults to auth.uid() on insert (see supabase/migrations/*_merchant_auth.sql).
 
 export type WorkflowSummary = {
   id: string
@@ -17,7 +17,6 @@ export async function listWorkflows(): Promise<WorkflowSummary[]> {
   const { data, error } = await supabase
     .from('workflows')
     .select('id, name, created_at, version:flow_json->version')
-    .eq('merchant_id', PLACEHOLDER_MERCHANT_ID)
     .order('created_at', { ascending: false })
   if (error) throw new Error(error.message)
   return (data ?? []) as WorkflowSummary[]
@@ -31,7 +30,6 @@ export async function getWorkflow(id: string): Promise<LoadedWorkflow> {
     .from('workflows')
     .select('id, name, flow_json')
     .eq('id', id)
-    .eq('merchant_id', PLACEHOLDER_MERCHANT_ID)
     .maybeSingle()
   if (error) throw new Error(error.message)
   if (!data) throw new Error('That workflow no longer exists.')
@@ -45,7 +43,7 @@ export async function getWorkflow(id: string): Promise<LoadedWorkflow> {
 export async function createWorkflow(name: string, flow: WorkflowJson): Promise<string> {
   const { data, error } = await supabase
     .from('workflows')
-    .insert({ merchant_id: PLACEHOLDER_MERCHANT_ID, name, flow_json: flow })
+    .insert({ name, flow_json: flow })
     .select('id')
     .single()
   if (error) throw new Error(error.message)
@@ -57,7 +55,6 @@ export async function updateWorkflow(id: string, name: string, flow: WorkflowJso
     .from('workflows')
     .update({ name, flow_json: flow })
     .eq('id', id)
-    .eq('merchant_id', PLACEHOLDER_MERCHANT_ID)
     .select('id')
   if (error) throw new Error(error.message)
   // An update that matches no rows is not an error in Supabase, so check explicitly.
