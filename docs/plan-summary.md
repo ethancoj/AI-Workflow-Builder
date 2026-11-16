@@ -132,6 +132,8 @@ Runtime flow (FYP2 target):
 - Rubrics can be saved from `/quotes` and picked in a Quote node
 - Workflow bar: name, open saved workflows, save/update in place, save as copy, unsaved-change warnings, `?id=` in the URL
 - Merchant accounts: email/password login (`/login`), one `merchants` row per account, RLS on `merchants` and `workflows`, and the API identifies the merchant from the login token (all quote endpoints require login)
+- **Workflow runtime / translation layer (Obj 5):** `apps/api/runtime/engine.py` runs a saved workflow one customer message at a time (Start trigger, LLM replies that wait for the customer, keyword and AI-intent branches, Quote with photo request, unusable-photo retry and escalation, End). A safety-net reply means customers never get silence. GPT-4o Mini is the stand-in intent classifier until the NLU module is integrated. 21 automated tests (`apps/api/tests`).
+- Builder test chat (chat with the canvas as a customer, steps that ran are highlighted) and workflow checks (plain-language problems/warnings with one-click fixes)
 - Merchant Overview dashboard (`/dashboard`, the home page) with live data plus a labelled demo-data mode, and one shared app layout (sidebar navigation) across Overview, Workflows and Pricing Rubric
 - Supabase schema for the quote engine in `supabase/migrations/`: `rubrics`, `quote_assessments` (backend-only via RLS), and the private `quote-images` bucket. Photos are stored by path.
 
@@ -143,7 +145,6 @@ Runtime flow (FYP2 target):
 - Optional: email confirmation and Google sign-in (both can be switched on in Supabase later).
 
 ### To build
-- The translation layer and workflow runtime engine (Obj 5), the core contribution
 - The Twilio WhatsApp webhook and send/receive (FR1.3, FR2.1 via WhatsApp)
 - A human escalation queue or UI
 - Deploy flow (FR1.3), templates (FR1.5), image quality check (FR2.5), and the API Call node
@@ -151,7 +152,9 @@ Runtime flow (FYP2 target):
 - Integration with NLU and scheduling (Wang Ruoxu's modules)
 
 ### Suggested order
-1. The translation layer and runtime engine, tested with a mock message endpoint first
-2. The Twilio sandbox webhook, with photos routed to the quote engine
-3. The evaluation harness (independent, so it can run in parallel)
-4. The alignment tasks above
+1. Alignment tasks above, plus workflow templates (FR1.5)
+2. Evaluation harness: start collecting photos now (independent, runs in parallel)
+3. Hosting, the Twilio sandbox webhook (same engine, state stored per customer) and a Deploy button blocked by check problems
+4. Real review queue for escalated and safety-net conversations
+5. Smarter branches (plain-language descriptions, photos recognised anywhere), customer detail capture
+6. SUS study, load test (NFR6), NLU/scheduling integration as those modules land

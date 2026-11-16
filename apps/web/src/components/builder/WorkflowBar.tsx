@@ -4,6 +4,8 @@ import { useReactFlow } from '@xyflow/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import AccountMenu from '@/components/auth/AccountMenu'
 import { NavButton, useShell } from '@/components/shell/AppShell'
+import { useTestRunStore } from '@/lib/workflow/testRunStore'
+import { ChecksButton } from './WorkflowChecks'
 import { DEFAULT_WORKFLOW_NAME, useBuilderStore } from '@/lib/workflow/builderStore'
 import {
   createWorkflow,
@@ -34,6 +36,8 @@ export default function WorkflowBar() {
   const setWorkflowName = useBuilderStore((s) => s.setWorkflowName)
   const { fitView } = useReactFlow()
   const { merchantName } = useShell()
+  const testing = useTestRunStore((s) => s.open)
+  const setTesting = useTestRunStore((s) => s.setOpen)
 
   const [workflows, setWorkflows] = useState<WorkflowSummary[] | null>(null)
   const [busy, setBusy] = useState(false)
@@ -182,6 +186,15 @@ export default function WorkflowBar() {
             </option>
           ))}
         </select>
+        <ChecksButton />
+        <button
+          onClick={() => setTesting(!testing)}
+          aria-pressed={testing}
+          title="Chat with this workflow as a customer"
+          className={testing ? `${buttonClass} !bg-brand-soft ring-1 ring-brand` : buttonClass}
+        >
+          {testing ? 'Close test chat' : 'Test chat'}
+        </button>
         <button onClick={startNew} disabled={busy} className={buttonClass}>
           New
         </button>
