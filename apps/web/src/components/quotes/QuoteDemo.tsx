@@ -214,10 +214,10 @@ export default function QuoteDemo() {
                 key={m.value}
                 onClick={() => setSelectedModel(m.value)}
                 aria-pressed={selectedModel === m.value}
-                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-teal ${
+                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-brand ${
                   selectedModel === m.value
-                    ? "border-teal bg-teal text-white"
-                    : "border-line bg-surface text-ink hover:border-teal"
+                    ? "border-brand bg-brand text-white"
+                    : "border-line bg-surface text-ink hover:border-brand"
                 }`}
               >
                 {m.label}
@@ -230,7 +230,7 @@ export default function QuoteDemo() {
 
       <main className="mx-auto w-full max-w-3xl space-y-6 p-4 md:p-6">
         {/* Tabs */}
-        <div className="flex bg-line/50 rounded-lg p-1 gap-1">
+        <div className="flex bg-brand-soft rounded-lg p-1 gap-1">
           {(["rubric", "assess"] as const).map((t) => (
             <button
               key={t}
@@ -256,7 +256,7 @@ export default function QuoteDemo() {
                     type="text"
                     value={rubric.name}
                     onChange={(e) => setRubric({ ...rubric, name: e.target.value })}
-                    className="w-full border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal/30"
+                    className="w-full border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -265,7 +265,7 @@ export default function QuoteDemo() {
                     type="text"
                     value={rubric.service_type}
                     onChange={(e) => setRubric({ ...rubric, service_type: e.target.value })}
-                    className="w-full border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal/30"
+                    className="w-full border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                   />
                 </div>
               </div>
@@ -280,7 +280,7 @@ export default function QuoteDemo() {
                   type="range" min="0.3" max="0.9" step="0.05"
                   value={rubric.escalation_threshold}
                   onChange={(e) => setRubric({ ...rubric, escalation_threshold: parseFloat(e.target.value) })}
-                  className="w-full accent-teal"
+                  className="w-full accent-brand"
                 />
                 <p className="text-xs text-muted">
                   If the model&apos;s confidence is below this, the job is escalated to a human agent.
@@ -291,21 +291,21 @@ export default function QuoteDemo() {
             {rubric.levels.map((lvl, i) => (
               <div key={i} className="bg-surface rounded-[10px] border border-line p-5 space-y-3">
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-bold bg-teal-soft text-teal-ink rounded-full w-7 h-7 flex items-center justify-center shrink-0">
+                  <span className="text-xs font-bold bg-brand-soft text-brand-ink rounded-full w-7 h-7 flex items-center justify-center shrink-0">
                     {lvl.level}
                   </span>
                   <input
                     type="text" value={lvl.name}
                     onChange={(e) => updateLevel(i, "name", e.target.value)}
                     placeholder="Level name, e.g. Clean / Light Dust"
-                    className="flex-1 border border-line rounded-lg px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal/30"
+                    className="flex-1 border border-line rounded-lg px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand/30"
                   />
                   <div className="flex items-center gap-1.5 shrink-0">
                     <span className="text-sm text-muted font-medium">RM</span>
                     <input
                       type="number" value={lvl.price}
                       onChange={(e) => updateLevel(i, "price", parseFloat(e.target.value))}
-                      className="w-20 border border-line rounded-lg px-2 py-2 text-sm font-mono text-right focus:outline-none focus:ring-2 focus:ring-teal/30"
+                      className="w-20 border border-line rounded-lg px-2 py-2 text-sm font-mono text-right focus:outline-none focus:ring-2 focus:ring-brand/30"
                     />
                   </div>
                   {rubric.levels.length > 1 && (
@@ -318,7 +318,7 @@ export default function QuoteDemo() {
                     type="text" value={lvl.description}
                     onChange={(e) => updateLevel(i, "description", e.target.value)}
                     placeholder="Describe what this condition looks like..."
-                    className="w-full border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal/30"
+                    className="w-full border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                   />
                 </div>
                 <div className="space-y-1">
@@ -329,12 +329,12 @@ export default function QuoteDemo() {
                     type="text" value={lvl.visual_cues.join(", ")}
                     onChange={(e) => updateCues(i, e.target.value)}
                     placeholder="e.g. light grey coating, fins visible, no blockage"
-                    className="w-full border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal/30"
+                    className="w-full border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                   />
                   {lvl.visual_cues.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 pt-1">
                       {lvl.visual_cues.map((cue, ci) => (
-                        <span key={ci} className="text-xs bg-line/50 text-muted rounded-full px-2 py-0.5">{cue}</span>
+                        <span key={ci} className="text-xs bg-brand-soft text-muted rounded-full px-2 py-0.5">{cue}</span>
                       ))}
                     </div>
                   )}
@@ -343,13 +343,13 @@ export default function QuoteDemo() {
             ))}
 
             <div className="flex gap-3">
-              <button onClick={addLevel} className="flex-1 border-2 border-dashed border-line text-muted hover:border-teal hover:text-teal-ink rounded-lg py-3 text-sm font-medium transition-colors">
+              <button onClick={addLevel} className="flex-1 border-2 border-dashed border-line text-muted hover:border-brand hover:text-brand-ink rounded-lg py-3 text-sm font-medium transition-colors">
                 + Add Level
               </button>
-              <button onClick={handleSaveRubric} className="flex-1 border border-teal text-teal-ink hover:bg-teal-soft rounded-lg py-3 text-sm font-semibold transition-colors">
+              <button onClick={handleSaveRubric} className="flex-1 border border-brand text-brand-ink hover:bg-brand-soft rounded-lg py-3 text-sm font-semibold transition-colors">
                 Save rubric
               </button>
-              <button onClick={() => setTab("assess")} className="flex-1 bg-teal text-white rounded-lg py-3 text-sm font-semibold hover:bg-teal/90 transition-colors">
+              <button onClick={() => setTab("assess")} className="flex-1 bg-brand text-white rounded-lg py-3 text-sm font-semibold hover:bg-brand/90 transition-colors">
                 Next: Assess Photo →
               </button>
             </div>
@@ -366,7 +366,7 @@ export default function QuoteDemo() {
             <div
               {...getRootProps()}
               className={`bg-surface rounded-[10px] border-2 border-dashed p-8 text-center cursor-pointer transition-all ${
-                isDragActive ? "border-teal bg-teal-soft" : "border-line hover:border-line"
+                isDragActive ? "border-brand bg-brand-soft" : "border-line hover:border-line"
               }`}
             >
               <input {...getInputProps()} />
@@ -390,7 +390,7 @@ export default function QuoteDemo() {
                 <p className="text-xs font-semibold text-muted uppercase tracking-wide">
                   Active Rubric: {rubric.name}
                 </p>
-                <span className="text-xs bg-teal-soft text-teal-ink font-medium px-2 py-0.5 rounded-full">
+                <span className="text-xs bg-brand-soft text-brand-ink font-medium px-2 py-0.5 rounded-full">
                   {MODELS.find((m) => m.value === selectedModel)?.label}
                 </span>
               </div>
@@ -411,7 +411,7 @@ export default function QuoteDemo() {
                 type="checkbox"
                 checked={saveToDashboard}
                 onChange={(e) => setSaveToDashboard(e.target.checked)}
-                className="h-4 w-4 accent-teal"
+                className="h-4 w-4 accent-brand"
               />
               Save the photo and result to my dashboard
             </label>
@@ -420,7 +420,7 @@ export default function QuoteDemo() {
             <button
               onClick={handleAssess}
               disabled={!imageFile || loading}
-              className="w-full bg-teal disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg py-3.5 font-semibold text-sm hover:bg-teal/90 transition-colors flex items-center justify-center gap-2"
+              className="w-full bg-brand disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg py-3.5 font-semibold text-sm hover:bg-brand/90 transition-colors flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
@@ -463,7 +463,7 @@ export default function QuoteDemo() {
                   </div>
                   <div className="bg-surface rounded-lg p-4 border border-line">
                     <p className="text-xs text-muted uppercase tracking-wide mb-1">Price Estimate</p>
-                    <p className="text-3xl font-bold text-teal-ink">RM{result.price_estimate}</p>
+                    <p className="text-3xl font-bold text-brand-ink">RM{result.price_estimate}</p>
                   </div>
                 </div>
 
@@ -484,7 +484,7 @@ export default function QuoteDemo() {
                       </span>
                     </div>
                   </div>
-                  <div className="relative h-2.5 bg-line/50 rounded-full overflow-hidden">
+                  <div className="relative h-2.5 bg-brand-soft rounded-full overflow-hidden">
                     <div className="absolute top-0 bottom-0 w-px bg-slate-400 z-10"
                       style={{ left: `${rubric.escalation_threshold * 100}%` }} />
                     <div className={`h-full rounded-full transition-all duration-700 ${confidenceBar(result.confidence)}`}
@@ -499,7 +499,7 @@ export default function QuoteDemo() {
                 {/* Model used */}
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-muted">Assessed by</span>
-                  <span className="text-xs bg-teal-soft text-teal-ink font-medium px-2 py-0.5 rounded-full">
+                  <span className="text-xs bg-brand-soft text-brand-ink font-medium px-2 py-0.5 rounded-full">
                     {result.model_used}
                   </span>
                 </div>
@@ -517,7 +517,7 @@ export default function QuoteDemo() {
                     <ul className="space-y-1.5">
                       {result.key_observations.map((obs, i) => (
                         <li key={i} className="text-sm text-ink flex items-start gap-2">
-                          <span className="text-teal-ink mt-0.5 shrink-0">→</span>{obs}
+                          <span className="text-brand-ink mt-0.5 shrink-0">→</span>{obs}
                         </li>
                       ))}
                     </ul>

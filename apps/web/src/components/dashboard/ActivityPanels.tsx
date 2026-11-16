@@ -9,7 +9,7 @@ export function WorkflowActivityPanel({ activity }: { activity: Section<Workflow
     <Panel
       title="Workflow Activity"
       action={
-        <Link href="/builder" className="text-xs font-medium text-teal-ink underline-offset-2 hover:underline">
+        <Link href="/builder" className="text-xs font-medium text-brand-ink underline-offset-2 hover:underline">
           Open builder
         </Link>
       }
@@ -20,7 +20,7 @@ export function WorkflowActivityPanel({ activity }: { activity: Section<Workflow
         empty={
           <p>
             No workflows yet.{' '}
-            <Link href="/builder" className="font-medium text-teal-ink hover:underline">
+            <Link href="/builder" className="font-medium text-brand-ink hover:underline">
               Create your first workflow
             </Link>
             .
@@ -45,7 +45,7 @@ function StageBars({ stages }: { stages: { name: string; count: number }[] }) {
             <span className="font-medium tabular-nums text-ink">{s.count}</span>
           </div>
           <div className="mt-1 h-2 rounded-full bg-page" aria-hidden>
-            <div className="h-2 rounded-full bg-teal" style={{ width: `${(s.count / max) * 100}%` }} />
+            <div className="h-2 rounded-full bg-brand" style={{ width: `${(s.count / max) * 100}%` }} />
           </div>
         </li>
       ))}
@@ -56,7 +56,7 @@ function StageBars({ stages }: { stages: { name: string; count: number }[] }) {
 function WorkflowList({ workflows }: { workflows: { id: string; name: string; createdAt: string; openable: boolean }[] }) {
   return (
     <>
-      <ul className="divide-y divide-line">
+      <ul className="divide-y divide-divider">
         {workflows.map((w) => (
           <li key={w.id} className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
             <div className="min-w-0">
@@ -66,7 +66,7 @@ function WorkflowList({ workflows }: { workflows: { id: string; name: string; cr
             {w.openable ? (
               <Link
                 href={`/builder?id=${w.id}`}
-                className="shrink-0 rounded-md border border-line px-2.5 py-1 text-xs font-medium text-ink hover:bg-page focus-visible:ring-2 focus-visible:ring-teal"
+                className="shrink-0 rounded-md border border-line px-2.5 py-1 text-xs font-medium text-ink hover:bg-page focus-visible:ring-2 focus-visible:ring-brand"
               >
                 Open
               </Link>
@@ -96,12 +96,12 @@ export function RecentActivityPanel({ events }: { events: Section<ActivityEvent[
     <Panel title="Recent Activity">
       <SectionBody section={events} isEmpty={(e) => e.length === 0} empty="No activity yet.">
         {(list) => (
-          <ol className="space-y-3">
+          <ol className="divide-y divide-divider">
             {list.map((e) => {
               const Icon = EVENT_ICON[e.kind]
               return (
-                <li key={e.id} className="flex gap-3 text-sm">
-                  <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${e.kind === 'review' ? 'text-amber-ink' : 'text-teal-ink'}`} aria-hidden />
+                <li key={e.id} className="flex gap-3 py-3 text-sm first:pt-0 last:pb-0">
+                  <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${e.kind === 'review' ? 'text-highlight-ink' : 'text-brand-ink'}`} aria-hidden />
                   <div className="min-w-0">
                     <p className="text-ink">{e.text}</p>
                     <time dateTime={e.at} title={fullDate(e.at)} className="text-xs text-muted">

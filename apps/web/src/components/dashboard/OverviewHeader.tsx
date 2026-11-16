@@ -2,6 +2,7 @@
 
 import { Bell, CalendarRange } from 'lucide-react'
 import PageHeader from '@/components/shell/PageHeader'
+import { DEMO_MERCHANT_NAME } from '@/lib/dashboard/demoData'
 import type { DataSource } from '@/lib/dashboard/types'
 
 export default function OverviewHeader({
@@ -15,11 +16,8 @@ export default function OverviewHeader({
     <PageHeader
       title="Overview"
       subtitle="AI Workflow Builder for SMEs"
-      badge={
-        source === 'demo' && (
-          <span className="rounded-full bg-amber-tint px-2.5 py-0.5 text-xs font-semibold text-amber-ink">Demo data</span>
-        )
-      }
+      // The demo banner below says it's demo data; here we only swap in the demo business name.
+      accountLabel={source === 'demo' ? DEMO_MERCHANT_NAME : undefined}
       actions={
         <>
           {/* Live vs sample data. Demo is for presentations and usability testing. */}
@@ -29,7 +27,7 @@ export default function OverviewHeader({
                 key={s}
                 aria-pressed={source === s}
                 onClick={() => onSourceChange(s)}
-                className={`rounded-md px-2.5 py-1 focus-visible:ring-2 focus-visible:ring-teal ${
+                className={`rounded-md px-2.5 py-1 focus-visible:ring-2 focus-visible:ring-brand ${
                   source === s ? 'bg-surface text-ink shadow-sm' : 'text-muted hover:text-ink'
                 }`}
               >

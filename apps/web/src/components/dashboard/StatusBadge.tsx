@@ -3,10 +3,10 @@ import type { QuoteStatus } from '@/lib/dashboard/types'
 
 // Each status has an icon AND a text label, so it reads correctly without colour.
 const STATUS = {
-  pending_ai: { label: 'Pending AI', Icon: Loader, className: 'bg-line/60 text-ink' },
-  draft: { label: 'Draft', Icon: FileText, className: 'bg-sky-50 text-sky-800 dark:bg-sky-950 dark:text-sky-200' },
-  sent: { label: 'Sent', Icon: CheckCircle2, className: 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200' },
-  needs_review: { label: 'Needs Review', Icon: AlertTriangle, className: 'bg-amber-tint text-amber-ink' },
+  pending_ai: { label: 'Pending AI', Icon: Loader, className: 'border border-dashed border-muted text-muted' },
+  draft: { label: 'Draft', Icon: FileText, className: 'border border-line text-ink' },
+  sent: { label: 'Sent', Icon: CheckCircle2, className: 'border border-brand bg-brand text-brand-on' },
+  needs_review: { label: 'Needs Review', Icon: AlertTriangle, className: 'border border-highlight-line bg-highlight font-semibold text-highlight-ink' },
 } satisfies Record<QuoteStatus, unknown>
 
 export default function StatusBadge({ status }: { status: QuoteStatus }) {

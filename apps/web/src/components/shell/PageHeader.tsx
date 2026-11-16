@@ -10,11 +10,14 @@ export default function PageHeader({
   subtitle,
   badge,
   actions,
+  accountLabel,
 }: {
   title: string
   subtitle?: string
   badge?: ReactNode
   actions?: ReactNode
+  /** Overrides the business name next to Log out (e.g. the demo merchant). */
+  accountLabel?: string
 }) {
   const { merchantName } = useShell()
   return (
@@ -30,7 +33,7 @@ export default function PageHeader({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {actions}
-          <AccountMenu label={merchantName} />
+          <AccountMenu label={accountLabel ?? merchantName} />
         </div>
       </div>
     </header>

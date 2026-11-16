@@ -13,7 +13,7 @@ export default function RecentQuotesTable({ quotes, source }: { quotes: Section<
         empty={
           <p>
             No quote requests yet. Customer photos will appear here once WhatsApp is connected. For now, you can{' '}
-            <Link href="/quotes" className="font-medium text-teal-ink underline-offset-2 hover:underline">
+            <Link href="/quotes" className="font-medium text-brand-ink underline-offset-2 hover:underline">
               test a photo on the Pricing Rubric page
             </Link>{' '}
             with “Save to my dashboard” ticked.
@@ -26,7 +26,7 @@ export default function RecentQuotesTable({ quotes, source }: { quotes: Section<
             <table className="w-full min-w-[560px] text-left text-sm">
               <caption className="sr-only">Most recent quote requests</caption>
               <thead className="text-xs uppercase tracking-wide text-muted">
-                <tr className="border-b border-line">
+                <tr className="border-b border-divider">
                   <th scope="col" className="px-4 pb-2 font-medium">Customer</th>
                   <th scope="col" className="px-4 pb-2 font-medium">Service</th>
                   <th scope="col" className="px-4 pb-2 font-medium">Status</th>
@@ -36,7 +36,7 @@ export default function RecentQuotesTable({ quotes, source }: { quotes: Section<
               </thead>
               <tbody>
                 {rows.map((q) => (
-                  <tr key={q.id} className="border-b border-line last:border-0">
+                  <tr key={q.id} className="border-b border-divider last:border-0">
                     <td className="px-4 py-3 font-medium text-ink">
                       {q.customer ?? (
                         <span className="font-normal text-muted" title="Uploaded on the Pricing Rubric test page">

@@ -24,13 +24,13 @@ export default function AccountMenu({
   }
 
   return (
-    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+    <div className="flex items-center gap-2 text-xs text-muted">
       <span className="hidden max-w-40 truncate sm:inline" title={email}>
         {email}
       </span>
       <button
         onClick={logOut}
-        className="rounded-md border border-slate-300 bg-white px-2.5 py-1.5 font-medium text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+        className="rounded-lg border border-line bg-surface px-2.5 py-1.5 font-medium text-ink hover:bg-brand-soft focus-visible:ring-2 focus-visible:ring-brand"
       >
         Log out
       </button>

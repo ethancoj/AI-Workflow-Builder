@@ -19,7 +19,7 @@ export default function Sidebar() {
             draggable
             onDragStart={(e) => onDragStart(e, type)}
             title={meta.description}
-            className="flex cursor-grab items-center gap-2.5 rounded-[10px] border border-line bg-surface px-3 py-2.5 hover:border-teal hover:bg-teal-soft active:cursor-grabbing"
+            className="flex cursor-grab items-center gap-2.5 rounded-[10px] border border-line bg-surface px-3 py-2.5 hover:border-brand hover:bg-brand-soft active:cursor-grabbing"
           >
             <span
               className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-sm text-white"

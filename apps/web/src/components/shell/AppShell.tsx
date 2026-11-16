@@ -20,7 +20,7 @@ export function NavButton() {
     <button
       onClick={openNav}
       aria-label="Open navigation"
-      className="rounded-md p-1.5 text-ink hover:bg-page focus-visible:ring-2 focus-visible:ring-teal md:hidden"
+      className="rounded-md p-1.5 text-ink hover:bg-page focus-visible:ring-2 focus-visible:ring-brand md:hidden"
     >
       <Menu className="h-5 w-5" aria-hidden />
     </button>
@@ -28,7 +28,7 @@ export function NavButton() {
 }
 
 /**
- * Layout shared by every logged-in merchant page: navy sidebar + page content.
+ * Layout shared by every logged-in merchant page: sidebar + page content.
  * Must be inside <RequireAuth>. Pinned to the light palette regardless of OS theme.
  */
 export default function AppShell({

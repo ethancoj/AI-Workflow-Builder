@@ -5,21 +5,38 @@ import type { Section } from '@/lib/dashboard/types'
 /** White card with a heading, used by every Overview panel. */
 export function Panel({
   title,
+  count,
+  id,
   action,
   children,
   className = '',
 }: {
   title: string
+  /** Shown as a small chip after the title, e.g. how many items are waiting. */
+  count?: number
+  /** Anchor id, so other parts of the page can link/jump to this panel. */
+  id?: string
   action?: ReactNode
   children: ReactNode
   className?: string
 }) {
   const headingId = `panel-${title.toLowerCase().replace(/\W+/g, '-')}`
   return (
-    <section aria-labelledby={headingId} className={`rounded-[10px] border border-line bg-surface ${className}`}>
-      <header className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
-        <h2 id={headingId} className="text-sm font-semibold text-ink">
+    <section
+      id={id}
+      tabIndex={id ? -1 : undefined}
+      aria-labelledby={headingId}
+      className={`scroll-mt-4 rounded-[10px] border border-line bg-surface outline-none focus-visible:ring-2 focus-visible:ring-brand ${className}`}
+    >
+      <header className="flex items-center justify-between gap-3 border-b border-divider px-4 py-3">
+        <h2 id={headingId} className="flex items-center gap-2 text-sm font-semibold text-ink">
           {title}
+          {count !== undefined && (
+            <span className="rounded-full bg-brand px-2 py-0.5 text-xs font-semibold tabular-nums text-brand-on">
+              {count}
+              <span className="sr-only"> waiting</span>
+            </span>
+          )}
         </h2>
         {action}
       </header>
@@ -43,9 +60,9 @@ export function SectionBody<T>({
   if (section.status === 'loading') {
     return (
       <div className="space-y-2" aria-busy="true" aria-label="Loading">
-        <div className="h-4 w-3/4 animate-pulse rounded bg-line/60" />
-        <div className="h-4 w-1/2 animate-pulse rounded bg-line/60" />
-        <div className="h-4 w-2/3 animate-pulse rounded bg-line/60" />
+        <div className="h-4 w-3/4 animate-pulse rounded bg-brand-soft" />
+        <div className="h-4 w-1/2 animate-pulse rounded bg-brand-soft" />
+        <div className="h-4 w-2/3 animate-pulse rounded bg-brand-soft" />
       </div>
     )
   }

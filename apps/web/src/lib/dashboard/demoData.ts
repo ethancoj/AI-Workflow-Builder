@@ -52,3 +52,40 @@ export function demoOverview(): OverviewData {
     },
   }
 }
+
+/** Business name shown in the header while demo data is on screen. */
+export const DEMO_MERCHANT_NAME = 'Breezy AC Services'
+
+/**
+ * Approve a demo quote at `finalPrice` and "send" it. Returns new demo data and never
+ * touches the API: demo actions only change what's on screen.
+ */
+export function approveDemoQuote(data: OverviewData, id: string, finalPrice: number): OverviewData {
+  if (data.quotes.status !== 'ready' || data.reviews.status !== 'ready' || data.summary.status !== 'ready') return data
+  const quote = data.reviews.data.find((q) => q.id === id)
+  if (!quote) return data
+
+  const sent: QuoteRow = { ...quote, status: 'sent', price: { min: finalPrice } }
+  const { awaitingReview, quotesSent } = data.summary.data
+  const bump = (m: { value: number | null; caption: string }, by: number) => ({ ...m, value: (m.value ?? 0) + by })
+
+  return {
+    ...data,
+    summary: {
+      status: 'ready',
+      data: { ...data.summary.data, awaitingReview: bump(awaitingReview, -1), quotesSent: bump(quotesSent, 1) },
+    },
+    quotes: { status: 'ready', data: data.quotes.data.map((q) => (q.id === id ? sent : q)) },
+    reviews: { status: 'ready', data: data.reviews.data.filter((q) => q.id !== id) },
+    events:
+      data.events.status === 'ready'
+        ? {
+            status: 'ready',
+            data: [
+              { id: `sent-${id}`, kind: 'quote', text: `Quote sent to ${quote.customer}: RM${finalPrice}`, at: new Date().toISOString() },
+              ...data.events.data,
+            ],
+          }
+        : data.events,
+  }
+}
