@@ -16,7 +16,7 @@ import type {
 } from '@/lib/workflow/types'
 
 const inputClass =
-  'w-full rounded-lg border border-line bg-surface px-2.5 py-2 text-sm text-ink placeholder:text-muted focus:border-teal focus:outline-none focus:ring-2 focus:ring-teal/20'
+  'w-full rounded-lg border border-line bg-surface px-2.5 py-2 text-sm text-ink placeholder:text-muted focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20'
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return (
@@ -193,7 +193,7 @@ function ConditionForm({ node }: { node: ConditionNode }) {
       ))}
       <button
         onClick={() => update(node.id, { branches: [...branches, { id: newId('branch'), match: 'intent', value: '' }] })}
-        className="w-full rounded-md border border-dashed border-line py-2 text-sm text-ink hover:border-teal"
+        className="w-full rounded-md border border-dashed border-line py-2 text-sm text-ink hover:border-brand"
       >
         + Add branch
       </button>
@@ -232,7 +232,7 @@ function QuoteForm({ node }: { node: QuoteNode }) {
         ) : !rubrics ? (
           <p className="text-xs text-muted">Loading rubrics…</p>
         ) : rubrics.length === 0 ? (
-          <p className="text-xs text-amber-ink">
+          <p className="text-xs text-highlight-ink">
             No saved rubrics yet. Create one on the{' '}
             <a href="/quotes" target="_blank" className="underline">
               Quotes page

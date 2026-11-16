@@ -10,24 +10,35 @@
 }
 
 /*
- * Merchant app palette. Use as Tailwind classes, e.g. bg-surface, text-ink, border-line.
- * Values are CSS variables so the whole app follows the OS light/dark setting.
- * text-teal-ink is for teal text/links; bg-teal is for filled teal surfaces with white text.
+ * App palette, named by role so the whole look can be changed here.
+ * Current look: black & white. Use as Tailwind classes, e.g.
+ *   bg-page / bg-surface        page and card backgrounds
+ *   text-ink / text-muted       main and secondary text
+ *   border-line                 crisp outer outlines (cards, panels)
+ *   border-divider              light internal dividers (table rows, lists)
+ *   bg-sidebar, bg-sidebar-hover, text-sidebar-ink, text-sidebar-muted
+ *   bg-brand + text-brand-on    filled buttons and the active nav item
+ *   text-brand-ink              links; bg-brand-soft for hover/selected tints
+ *   bg-highlight, border-highlight-line, text-highlight-ink   "needs attention"
  */
 @theme inline {
-  --color-navy: var(--navy);
-  --color-navy-soft: var(--navy-soft);
-  --color-teal: var(--teal);
-  --color-teal-ink: var(--teal-ink);
-  --color-teal-soft: var(--teal-soft);
-  --color-amber-tint: var(--amber-tint);
-  --color-amber-line: var(--amber-line);
-  --color-amber-ink: var(--amber-ink);
   --color-page: var(--page);
   --color-surface: var(--surface);
   --color-line: var(--line);
+  --color-divider: var(--divider);
   --color-ink: var(--ink);
   --color-muted: var(--muted);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-hover: var(--sidebar-hover);
+  --color-sidebar-ink: var(--sidebar-ink);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-brand: var(--brand);
+  --color-brand-on: var(--brand-on);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-soft: var(--brand-soft);
+  --color-highlight: var(--highlight);
+  --color-highlight-line: var(--highlight-line);
+  --color-highlight-ink: var(--highlight-ink);
   --color-background: var(--page);
   --color-foreground: var(--ink);
   --font-sans: var(--font-geist-sans);
@@ -37,37 +48,46 @@
 :root,
 .theme-light {
   color-scheme: light;
-  --navy: #172337;
-  --navy-soft: #22324b;
-  --teal: #0f6565;
-  --teal-ink: #0f6565;
-  --teal-soft: #e3f1f0;
-  --amber-tint: #fff1cf;
-  --amber-line: #f5d78e;
-  --amber-ink: #78350f;
-  --page: #f7f6f1;
+  --page: #ffffff;
   --surface: #ffffff;
-  --line: #dadde1;
-  --ink: #182131;
-  --muted: #5b6575;
+  --line: #18181b;
+  --divider: #e4e4e7;
+  --ink: #0a0a0a;
+  --muted: #52525b;
+  --sidebar: #ffffff;
+  --sidebar-hover: #f4f4f5;
+  --sidebar-ink: #0a0a0a;
+  --sidebar-muted: #71717a;
+  --brand: #0a0a0a;
+  --brand-on: #ffffff;
+  --brand-ink: #0a0a0a;
+  --brand-soft: #f4f4f5;
+  --highlight: #f4f4f5;
+  --highlight-line: #18181b;
+  --highlight-ink: #0a0a0a;
 }
 
+/* Only pages outside the app shell (e.g. /login) use these. */
 @media (prefers-color-scheme: dark) {
   :root:not(.theme-light) {
     color-scheme: dark;
-    --navy: #0b111b;
-    --navy-soft: #1a2536;
-    --teal: #13756f;
-    --teal-ink: #5cc8bf;
-    --teal-soft: #13302f;
-    --amber-tint: #33290f;
-    --amber-line: #5c4a1a;
-    --amber-ink: #f8d48a;
-    --page: #0f1621;
-    --surface: #161f2c;
-    --line: #283444;
-    --ink: #e5e9ef;
-    --muted: #96a2b3;
+    --page: #0a0a0a;
+    --surface: #111113;
+    --line: #3f3f46;
+    --divider: #27272a;
+    --ink: #fafafa;
+    --muted: #a1a1aa;
+    --sidebar: #0a0a0a;
+    --sidebar-hover: #1c1c1f;
+    --sidebar-ink: #fafafa;
+    --sidebar-muted: #a1a1aa;
+    --brand: #fafafa;
+    --brand-on: #0a0a0a;
+    --brand-ink: #fafafa;
+    --brand-soft: #1c1c1f;
+    --highlight: #1c1c1f;
+    --highlight-line: #52525b;
+    --highlight-ink: #fafafa;
   }
 }
 

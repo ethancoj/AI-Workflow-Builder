@@ -29,3 +29,14 @@ export function fullDate(iso: string): string {
 export function capitalise(s: string): string {
   return s ? s[0].toUpperCase() + s.slice(1) : s
 }
+
+/** How long something has been waiting: "6 min", "2 hr", "3 days". */
+export function waitingFor(iso: string, now = Date.now()): string {
+  const minutes = Math.max(0, Math.round((now - new Date(iso).getTime()) / 60_000))
+  if (minutes < 1) return 'under a min'
+  if (minutes < 60) return `${minutes} min`
+  const hours = Math.round(minutes / 60)
+  if (hours < 24) return `${hours} hr`
+  const days = Math.round(hours / 24)
+  return `${days} day${days === 1 ? '' : 's'}`
+}

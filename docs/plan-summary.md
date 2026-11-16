@@ -124,7 +124,7 @@ Runtime flow (FYP2 target):
 - **Out of scope:** payments and voice messages.
 - **Cost:** per-call VLM costs cap the dataset size.
 
-## FYP2 progress and to-do (as of 2026-11-17)
+## FYP2 progress and to-do (as of 2026-11-16)
 
 ### Done
 - Settings form for every node type, with the config saved in the workflow JSON (`{version: 1, nodes, edges}`). Condition branches and the Quote node's quoted/escalated exits are separate edge handles.
