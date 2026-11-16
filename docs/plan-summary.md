@@ -132,6 +132,7 @@ Runtime flow (FYP2 target):
 - Rubrics can be saved from `/quotes` and picked in a Quote node
 - Workflow bar: name, open saved workflows, save/update in place, save as copy, unsaved-change warnings, `?id=` in the URL
 - Merchant accounts: email/password login (`/login`), one `merchants` row per account, RLS on `merchants` and `workflows`, and the API identifies the merchant from the login token (all quote endpoints require login)
+- Merchant Overview dashboard (`/dashboard`, the home page) with live data plus a labelled demo-data mode, and one shared app layout (sidebar navigation) across Overview, Workflows and Pricing Rubric
 - Supabase schema for the quote engine in `supabase/migrations/`: `rubrics`, `quote_assessments` (backend-only via RLS), and the private `quote-images` bucket. Photos are stored by path.
 
 ### Alignment tasks (small)

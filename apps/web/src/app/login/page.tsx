@@ -9,7 +9,7 @@ type Mode = 'login' | 'signup'
 /** Where to go after logging in. Only same-site paths, so ?next= can't send people elsewhere. */
 function nextPath(): string {
   const next = new URLSearchParams(window.location.search).get('next')
-  return next && next.startsWith('/') && !next.startsWith('//') ? next : '/builder'
+  return next && next.startsWith('/') && !next.startsWith('//') ? next : '/dashboard'
 }
 
 const inputClass =

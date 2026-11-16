@@ -25,7 +25,7 @@ from typing import Literal, Optional
 
 import google.generativeai as genai
 from google import genai
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 
 from merchant_auth import current_merchant_id
 from pydantic import BaseModel, field_validator
@@ -340,6 +340,11 @@ def _persist_assessment(*, assessment_id, merchant_id, rubric, image_bytes,
                          content_type, filename, vlm, confidence, escalated):
     try:
         sb = _supabase()
+        # rubric.id comes from the browser: only keep it if this merchant owns that rubric.
+        rubric_id = None
+        if rubric.id:
+            owned = sb.table("rubrics").select("id").eq("id", rubric.id).eq("merchant_id", merchant_id).execute().data
+            rubric_id = rubric.id if owned else None
         image_path = f"{merchant_id}/{assessment_id}/{filename}"
         sb.storage.from_("quote-images").upload(
             path=image_path, file=image_bytes,
@@ -350,7 +355,7 @@ def _persist_assessment(*, assessment_id, merchant_id, rubric, image_bytes,
         sb.table("quote_assessments").insert({
             "id": assessment_id,
             "merchant_id": merchant_id,
-            "rubric_id": rubric.id,
+            "rubric_id": rubric_id,
             "image_path": image_path,
             "condition_level": vlm["condition_level"],
             "level_name": vlm["level_name"],
@@ -386,7 +391,7 @@ async def get_rubrics(merchant_id: str = Depends(current_merchant_id)) -> list[d
 
 
 @router.get("/assessments")
-async def get_assessments(limit: int = 20, merchant_id: str = Depends(current_merchant_id)) -> list[dict]:
+async def get_assessments(limit: int = Query(20, ge=1, le=200), merchant_id: str = Depends(current_merchant_id)) -> list[dict]:
     sb = _supabase()
     return (
         sb.table("quote_assessments")
