@@ -10,16 +10,27 @@ import {
   type XYPosition,
 } from '@xyflow/react'
 import { createNode } from './nodeMeta'
-import type { WorkflowNode, WorkflowNodeType } from './types'
+import type { WorkflowJson, WorkflowNode, WorkflowNodeType } from './types'
 
 // Fixed id (not random) so the server and client render the same initial markup.
-const initialNodes: WorkflowNode[] = [
+const initialNodes = (): WorkflowNode[] => [
   { id: 'start-1', type: 'start', position: { x: 250, y: 50 }, data: { trigger: 'any_message', keywords: [] } },
 ]
+
+export const DEFAULT_WORKFLOW_NAME = 'Untitled workflow'
+
+// Selection and size measurements change constantly but aren't edits worth saving.
+const isEdit = (change: { type: string }) => change.type !== 'select' && change.type !== 'dimensions'
 
 type BuilderState = {
   nodes: WorkflowNode[]
   edges: Edge[]
+  /** Supabase id of the open workflow, or null if it has never been saved. */
+  workflowId: string | null
+  workflowName: string
+  /** True when there are edits since the last load or save. */
+  dirty: boolean
+
   onNodesChange: (changes: NodeChange<WorkflowNode>[]) => void
   onEdgesChange: (changes: EdgeChange[]) => void
   onConnect: (connection: Connection) => void
@@ -28,15 +39,27 @@ type BuilderState = {
   updateNodeData: <T extends WorkflowNode>(id: string, patch: Partial<T['data']>) => void
   /** Removes a Condition branch along with the edge leaving its handle. */
   removeConditionBranch: (nodeId: string, branchId: string) => void
+  setWorkflowName: (name: string) => void
+
+  newWorkflow: () => void
+  loadWorkflow: (id: string, name: string, flow: WorkflowJson) => void
+  markSaved: (id: string, name: string) => void
+  /** The canvas as saved JSON, without UI-only fields like selection or measured size. */
+  toWorkflowJson: () => WorkflowJson
 }
 
 export const useBuilderStore = create<BuilderState>((set, get) => ({
-  nodes: initialNodes,
+  nodes: initialNodes(),
   edges: [],
+  workflowId: null,
+  workflowName: DEFAULT_WORKFLOW_NAME,
+  dirty: false,
 
-  onNodesChange: (changes) => set({ nodes: applyNodeChanges(changes, get().nodes) }),
+  onNodesChange: (changes) =>
+    set({ nodes: applyNodeChanges(changes, get().nodes), dirty: get().dirty || changes.some(isEdit) }),
 
-  onEdgesChange: (changes) => set({ edges: applyEdgeChanges(changes, get().edges) }),
+  onEdgesChange: (changes) =>
+    set({ edges: applyEdgeChanges(changes, get().edges), dirty: get().dirty || changes.some(isEdit) }),
 
   // Each output handle leads to exactly one next step, so the runtime never has to
   // choose between two edges. Connecting from a used handle replaces its old edge.
@@ -45,18 +68,19 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
     const remaining = get().edges.filter(
       (e) => !(e.source === connection.source && (e.sourceHandle ?? null) === sourceHandle),
     )
-    set({ edges: addEdge(connection, remaining) })
+    set({ edges: addEdge(connection, remaining), dirty: true })
   },
 
   addNode: (type, position) => {
     if (type === 'start' && get().nodes.some((n) => n.type === 'start')) return false
-    set({ nodes: [...get().nodes, createNode(type, position)] })
+    set({ nodes: [...get().nodes, createNode(type, position)], dirty: true })
     return true
   },
 
   updateNodeData: (id, patch) =>
     set({
       nodes: get().nodes.map((n) => (n.id === id ? ({ ...n, data: { ...n.data, ...patch } } as WorkflowNode) : n)),
+      dirty: true,
     }),
 
   removeConditionBranch: (nodeId, branchId) =>
@@ -67,5 +91,34 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
           : n,
       ),
       edges: get().edges.filter((e) => !(e.source === nodeId && e.sourceHandle === branchId)),
+      dirty: true,
     }),
+
+  setWorkflowName: (name) => set({ workflowName: name, dirty: true }),
+
+  newWorkflow: () =>
+    set({ nodes: initialNodes(), edges: [], workflowId: null, workflowName: DEFAULT_WORKFLOW_NAME, dirty: false }),
+
+  loadWorkflow: (id, name, flow) =>
+    set({
+      nodes: flow.nodes.map((n) => ({ ...n, selected: false })),
+      edges: flow.edges.map((e) => ({ ...e, selected: false })),
+      workflowId: id,
+      workflowName: name,
+      dirty: false,
+    }),
+
+  markSaved: (id, name) => set({ workflowId: id, workflowName: name, dirty: false }),
+
+  toWorkflowJson: () => ({
+    version: 1,
+    nodes: get().nodes.map(({ id, type, position, data }) => ({ id, type, position, data }) as WorkflowNode),
+    edges: get().edges.map(({ id, source, target, sourceHandle, targetHandle }) => ({
+      id,
+      source,
+      target,
+      sourceHandle: sourceHandle ?? null,
+      targetHandle: targetHandle ?? null,
+    })),
+  }),
 }))
