@@ -25,7 +25,9 @@ from typing import Literal, Optional
 
 import google.generativeai as genai
 from google import genai
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+
+from merchant_auth import current_merchant_id
 from pydantic import BaseModel, field_validator
 from supabase import Client, create_client
 
@@ -260,7 +262,8 @@ async def assess_photo(
     image: UploadFile = File(...),
     rubric_json: str = Form(...),
     model: ModelChoice = Form("gemini"),
-    merchant_id: Optional[str] = Form(None),
+    save: bool = Form(False),  # persist photo + result for this merchant
+    merchant_id: str = Depends(current_merchant_id),
 ) -> AssessmentResult:
     # 1. Parse rubric
     try:
@@ -306,7 +309,7 @@ async def assess_photo(
 
     # 6. Persist (optional)
     assessment_id = str(uuid.uuid4())
-    if merchant_id:
+    if save:
         _persist_assessment(
             assessment_id=assessment_id,
             merchant_id=merchant_id,
@@ -364,7 +367,7 @@ def _persist_assessment(*, assessment_id, merchant_id, rubric, image_bytes,
 # ── Rubric CRUD ───────────────────────────────────────────────────────────────
 
 @router.post("/rubrics")
-async def create_rubric(rubric: Rubric, merchant_id: str) -> dict:
+async def create_rubric(rubric: Rubric, merchant_id: str = Depends(current_merchant_id)) -> dict:
     sb = _supabase()
     result = sb.table("rubrics").insert({
         "merchant_id": merchant_id,
@@ -376,14 +379,14 @@ async def create_rubric(rubric: Rubric, merchant_id: str) -> dict:
     return {"id": result.data[0]["id"], "message": "Rubric saved"}
 
 
-@router.get("/rubrics/{merchant_id}")
-async def get_rubrics(merchant_id: str) -> list[dict]:
+@router.get("/rubrics")
+async def get_rubrics(merchant_id: str = Depends(current_merchant_id)) -> list[dict]:
     sb = _supabase()
     return sb.table("rubrics").select("*").eq("merchant_id", merchant_id).execute().data
 
 
-@router.get("/assessments/{merchant_id}")
-async def get_assessments(merchant_id: str, limit: int = 20) -> list[dict]:
+@router.get("/assessments")
+async def get_assessments(limit: int = 20, merchant_id: str = Depends(current_merchant_id)) -> list[dict]:
     sb = _supabase()
     return (
         sb.table("quote_assessments")

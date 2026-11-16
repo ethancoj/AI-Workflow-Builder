@@ -2,7 +2,7 @@
 
 import { useReactFlow } from '@xyflow/react'
 import { useEffect, useState, type ReactNode } from 'react'
-import { PLACEHOLDER_MERCHANT_ID } from '@/lib/merchant'
+import { apiErrorMessage, apiFetch } from '@/lib/api'
 import { useBuilderStore } from '@/lib/workflow/builderStore'
 import { NODE_META, newId } from '@/lib/workflow/nodeMeta'
 import type {
@@ -210,9 +210,9 @@ function QuoteForm({ node }: { node: QuoteNode }) {
 
   useEffect(() => {
     let cancelled = false
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/quotes/rubrics/${PLACEHOLDER_MERCHANT_ID}`)
+    apiFetch('/api/quotes/rubrics')
       .then(async (res) => {
-        if (!res.ok) throw new Error(`API returned ${res.status}`)
+        if (!res.ok) throw new Error(await apiErrorMessage(res))
         return (await res.json()) as RubricOption[]
       })
       .then((data) => !cancelled && setRubrics(data))
@@ -226,7 +226,9 @@ function QuoteForm({ node }: { node: QuoteNode }) {
     <div className="space-y-4">
       <Field label="Pricing rubric" hint="The AI compares the customer's photo against this rubric to pick a price.">
         {error ? (
-          <p className="text-xs text-rose-400">Couldn&apos;t load rubrics ({error}). Is the API server running?</p>
+          <p className="text-xs text-rose-400">
+            Couldn&apos;t load rubrics ({error}). Check that the API server is running.
+          </p>
         ) : !rubrics ? (
           <p className="text-xs text-neutral-500">Loading rubrics…</p>
         ) : rubrics.length === 0 ? (

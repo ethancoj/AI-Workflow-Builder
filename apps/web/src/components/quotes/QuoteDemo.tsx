@@ -2,7 +2,8 @@
 
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
-import { PLACEHOLDER_MERCHANT_ID } from "@/lib/merchant";
+import AccountMenu from "@/components/auth/AccountMenu";
+import { apiErrorMessage, apiFetch } from "@/lib/api";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -138,15 +139,8 @@ export default function QuoteDemo() {
       fd.append("rubric_json", JSON.stringify(rubric));
       fd.append("model", selectedModel);
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/quotes/assess`,
-        { method: "POST", body: fd }
-      );
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({ detail: res.statusText }));
-        throw new Error(body.detail ?? "Assessment failed");
-      }
+      const res = await apiFetch("/api/quotes/assess", { method: "POST", body: fd });
+      if (!res.ok) throw new Error(await apiErrorMessage(res));
 
       setResult(await res.json());
     } catch (e: unknown) {
@@ -160,15 +154,12 @@ export default function QuoteDemo() {
   const handleSaveRubric = async () => {
     setSaveStatus(null);
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/quotes/rubrics?merchant_id=${PLACEHOLDER_MERCHANT_ID}`,
-        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(rubric) }
-      );
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({ detail: res.statusText }));
-        const detail = typeof body.detail === "string" ? body.detail : JSON.stringify(body.detail);
-        throw new Error(detail ?? "Save failed");
-      }
+      const res = await apiFetch("/api/quotes/rubrics", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(rubric),
+      });
+      if (!res.ok) throw new Error(await apiErrorMessage(res));
       setSaveStatus({ ok: true, message: "Rubric saved. You can now pick it in a Quote node." });
     } catch (e: unknown) {
       setSaveStatus({ ok: false, message: e instanceof Error ? e.message : "Save failed" });
@@ -235,6 +226,7 @@ export default function QuoteDemo() {
                 </button>
               ))}
             </div>
+            <AccountMenu />
           </div>
         </div>
       </header>
