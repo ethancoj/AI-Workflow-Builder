@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
+import { PLACEHOLDER_MERCHANT_ID } from "@/lib/merchant";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -104,6 +105,7 @@ export default function QuoteDemo() {
   const [result, setResult] = useState<AssessmentResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<{ ok: boolean; message: string } | null>(null);
 
   // ── Dropzone ──────────────────────────────────────────────────────────────
 
@@ -151,6 +153,25 @@ export default function QuoteDemo() {
       setError(e instanceof Error ? e.message : "Unexpected error");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Saves the rubric so the workflow builder's Quote node can pick it.
+  const handleSaveRubric = async () => {
+    setSaveStatus(null);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/quotes/rubrics?merchant_id=${PLACEHOLDER_MERCHANT_ID}`,
+        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(rubric) }
+      );
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ detail: res.statusText }));
+        const detail = typeof body.detail === "string" ? body.detail : JSON.stringify(body.detail);
+        throw new Error(detail ?? "Save failed");
+      }
+      setSaveStatus({ ok: true, message: "Rubric saved. You can now pick it in a Quote node." });
+    } catch (e: unknown) {
+      setSaveStatus({ ok: false, message: e instanceof Error ? e.message : "Save failed" });
     }
   };
 
@@ -336,10 +357,16 @@ export default function QuoteDemo() {
               <button onClick={addLevel} className="flex-1 border-2 border-dashed border-slate-300 text-slate-400 hover:border-violet-400 hover:text-violet-600 rounded-xl py-3 text-sm font-medium transition-colors">
                 + Add Level
               </button>
+              <button onClick={handleSaveRubric} className="flex-1 border border-violet-300 text-violet-700 hover:bg-violet-50 rounded-xl py-3 text-sm font-semibold transition-colors">
+                Save rubric
+              </button>
               <button onClick={() => setTab("assess")} className="flex-1 bg-violet-600 text-white rounded-xl py-3 text-sm font-semibold hover:bg-violet-700 transition-colors">
                 Next: Assess Photo →
               </button>
             </div>
+            {saveStatus && (
+              <p className={`text-sm ${saveStatus.ok ? "text-emerald-600" : "text-rose-600"}`}>{saveStatus.message}</p>
+            )}
           </div>
         )}
 

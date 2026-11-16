@@ -1,10 +1,4 @@
-const nodeTypes = [
-  { type: 'start', label: '▶ Start', color: '#16a34a' },
-  { type: 'llm', label: '🤖 LLM Response', color: '#2563eb' },
-  { type: 'condition', label: '🔀 Condition', color: '#d97706' },
-  { type: 'quote', label: '📷 Quote', color: '#7c3aed' },
-  { type: 'end', label: '⏹ End', color: '#dc2626' },
-]
+import { NODE_META, NODE_ORDER } from '@/lib/workflow/nodeMeta'
 
 export default function Sidebar() {
   const onDragStart = (event: React.DragEvent, nodeType: string) => {
@@ -21,17 +15,19 @@ export default function Sidebar() {
       display: 'flex',
       flexDirection: 'column',
       gap: '10px',
+      flexShrink: 0,
     }}>
       <p style={{ color: '#888', fontSize: '11px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
         Drag nodes onto canvas
       </p>
-      {nodeTypes.map((node) => (
+      {NODE_ORDER.map((type) => (
         <div
-          key={node.type}
+          key={type}
           draggable
-          onDragStart={(e) => onDragStart(e, node.type)}
+          onDragStart={(e) => onDragStart(e, type)}
+          title={NODE_META[type].description}
           style={{
-            backgroundColor: node.color,
+            backgroundColor: NODE_META[type].color,
             color: 'white',
             padding: '10px 14px',
             borderRadius: '8px',
@@ -40,7 +36,7 @@ export default function Sidebar() {
             fontWeight: '500',
           }}
         >
-          {node.label}
+          {NODE_META[type].icon} {NODE_META[type].label}
         </div>
       ))}
     </div>
