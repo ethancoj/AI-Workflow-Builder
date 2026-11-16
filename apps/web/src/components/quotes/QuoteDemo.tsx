@@ -16,6 +16,7 @@ interface RubricLevel {
 }
 
 interface Rubric {
+  id?: string; // set once saved, so assessments link to it
   name: string;
   service_type: string;
   levels: RubricLevel[];
@@ -106,6 +107,7 @@ export default function QuoteDemo() {
   const [result, setResult] = useState<AssessmentResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saveToDashboard, setSaveToDashboard] = useState(true);
   const [saveStatus, setSaveStatus] = useState<{ ok: boolean; message: string } | null>(null);
 
   // ── Dropzone ──────────────────────────────────────────────────────────────
@@ -138,6 +140,7 @@ export default function QuoteDemo() {
       fd.append("image", imageFile);
       fd.append("rubric_json", JSON.stringify(rubric));
       fd.append("model", selectedModel);
+      fd.append("save", String(saveToDashboard));
 
       const res = await apiFetch("/api/quotes/assess", { method: "POST", body: fd });
       if (!res.ok) throw new Error(await apiErrorMessage(res));
@@ -160,6 +163,8 @@ export default function QuoteDemo() {
         body: JSON.stringify(rubric),
       });
       if (!res.ok) throw new Error(await apiErrorMessage(res));
+      const { id } = await res.json();
+      setRubric((r) => ({ ...r, id }));
       setSaveStatus({ ok: true, message: "Rubric saved. You can now pick it in a Quote node." });
     } catch (e: unknown) {
       setSaveStatus({ ok: false, message: e instanceof Error ? e.message : "Save failed" });
@@ -408,6 +413,16 @@ export default function QuoteDemo() {
                 </span>
               </div>
             </div>
+
+            <label className="flex items-center gap-2 text-sm text-slate-600">
+              <input
+                type="checkbox"
+                checked={saveToDashboard}
+                onChange={(e) => setSaveToDashboard(e.target.checked)}
+                className="h-4 w-4 accent-violet-600"
+              />
+              Save the photo and result to my dashboard
+            </label>
 
             {/* Submit */}
             <button
