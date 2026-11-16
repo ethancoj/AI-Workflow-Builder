@@ -9,6 +9,7 @@ import {
   type NodeChange,
   type XYPosition,
 } from '@xyflow/react'
+import { DEFAULT_END_MESSAGE } from './checks'
 import { createNode } from './nodeMeta'
 import type { WorkflowJson, WorkflowNode, WorkflowNodeType } from './types'
 
@@ -40,6 +41,10 @@ type BuilderState = {
   /** Removes a Condition branch along with the edge leaving its handle. */
   removeConditionBranch: (nodeId: string, branchId: string) => void
   setWorkflowName: (name: string) => void
+  /** Selects one node (opens its settings), deselecting the rest. */
+  selectNode: (id: string) => void
+  /** Quick fix: adds an End step with a closing message and connects it to `sourceId`'s `handle`. */
+  addConnectedEnd: (sourceId: string, handle: string | null) => void
 
   newWorkflow: () => void
   loadWorkflow: (id: string, name: string, flow: WorkflowJson) => void
@@ -95,6 +100,23 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
     }),
 
   setWorkflowName: (name) => set({ workflowName: name, dirty: true }),
+
+  selectNode: (id) =>
+    set({
+      nodes: get().nodes.map((n) => (n.selected === (n.id === id) ? n : { ...n, selected: n.id === id })),
+      edges: get().edges.map((e) => (e.selected ? { ...e, selected: false } : e)),
+    }),
+
+  addConnectedEnd: (sourceId, handle) => {
+    const source = get().nodes.find((n) => n.id === sourceId)
+    if (!source) return
+    // Place it to the right of the source, staggered so several fixes don't stack exactly.
+    const siblings = get().edges.filter((e) => e.source === sourceId).length
+    const end = createNode('end', { x: source.position.x + 320, y: source.position.y + siblings * 110 })
+    if (end.type === 'end') end.data.message = DEFAULT_END_MESSAGE
+    set({ nodes: [...get().nodes, end] })
+    get().onConnect({ source: sourceId, sourceHandle: handle, target: end.id, targetHandle: null })
+  },
 
   newWorkflow: () =>
     set({ nodes: initialNodes(), edges: [], workflowId: null, workflowName: DEFAULT_WORKFLOW_NAME, dirty: false }),

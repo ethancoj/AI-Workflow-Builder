@@ -257,6 +257,54 @@ MODEL_LABELS = {
 }
 
 
+class InvalidLevelError(HTTPException):
+    """The model's answer doesn't match any rubric level (often: the photo is unusable)."""
+
+
+async def assess_image(rubric: Rubric, image_bytes: bytes, content_type: str, model: ModelChoice) -> tuple[dict, float, bool]:
+    """
+    The quoting pipeline minus HTTP: one VLM call with the shared prompt, a check that the
+    level exists in the rubric, and confidence gating. Used by /assess and the workflow runtime.
+    Returns (model output, confidence, escalated).
+    """
+    if model == "gemini":
+        vlm = await _call_gemini(image_bytes, content_type, rubric)
+    elif model == "gpt4o":
+        vlm = await _call_gpt4o(image_bytes, content_type, rubric)
+    else:
+        vlm = await _call_claude(image_bytes, content_type, rubric)
+
+    valid_levels = {lvl.level for lvl in rubric.levels}
+    if vlm.get("condition_level") not in valid_levels:
+        raise InvalidLevelError(
+            status_code=502,
+            detail=f"Model returned invalid level {vlm.get('condition_level')}. Expected one of {sorted(valid_levels)}",
+        )
+
+    confidence = float(vlm.get("confidence", 0.0))
+    return vlm, confidence, confidence < rubric.escalation_threshold
+
+
+def load_rubric(rubric_id: str, merchant_id: str) -> Optional[Rubric]:
+    """A saved rubric, only if it belongs to this merchant."""
+    rows = (
+        _supabase().table("rubrics").select("*")
+        .eq("id", rubric_id).eq("merchant_id", merchant_id)
+        .limit(1).execute().data
+    )
+    if not rows:
+        return None
+    r = rows[0]
+    return Rubric(
+        id=r["id"], name=r["name"], service_type=r.get("service_type") or "aircon",
+        levels=r["levels"], escalation_threshold=r.get("escalation_threshold") or 0.6,
+    )
+
+
+ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
+MAX_IMAGE_BYTES = 10 * 1024 * 1024
+
+
 @router.post("/assess", response_model=AssessmentResult)
 async def assess_photo(
     image: UploadFile = File(...),
@@ -272,34 +320,15 @@ async def assess_photo(
         raise HTTPException(status_code=422, detail=f"Invalid rubric: {exc}") from exc
 
     # 2. Validate image
-    allowed = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
-    if image.content_type not in allowed:
+    if image.content_type not in ALLOWED_IMAGE_TYPES:
         raise HTTPException(status_code=415, detail=f"Unsupported image type: {image.content_type}")
 
     image_bytes = await image.read()
-    if len(image_bytes) > 10 * 1024 * 1024:
+    if len(image_bytes) > MAX_IMAGE_BYTES:
         raise HTTPException(status_code=413, detail="Image too large — max 10 MB")
 
-    # 3. Route to selected model
-    if model == "gemini":
-        vlm = await _call_gemini(image_bytes, image.content_type, rubric)
-    elif model == "gpt4o":
-        vlm = await _call_gpt4o(image_bytes, image.content_type, rubric)
-    else:
-        vlm = await _call_claude(image_bytes, image.content_type, rubric)
-
-    # 4. Validate response
-    valid_levels = {lvl.level for lvl in rubric.levels}
-    if vlm.get("condition_level") not in valid_levels:
-        raise HTTPException(
-            status_code=502,
-            detail=f"Model returned invalid level {vlm.get('condition_level')}. Expected one of {sorted(valid_levels)}",
-        )
-
-    confidence = float(vlm.get("confidence", 0.0))
-
-    # 5. Confidence gating
-    escalated = confidence < rubric.escalation_threshold
+    # 3–5. Call the model, validate its answer, apply confidence gating
+    vlm, confidence, escalated = await assess_image(rubric, image_bytes, image.content_type, model)
     escalation_reason = None
     if escalated:
         escalation_reason = (

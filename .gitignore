@@ -16,3 +16,7 @@ node_modules/
 
 # docs: keep the report PDF private, share the markdown summaries
 docs/*.pdf
+
+# test runner cache
+.pytest_cache/
+

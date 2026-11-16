@@ -16,8 +16,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from routers import quotes
+from routers import quotes, runtime
 app.include_router(quotes.router)
+app.include_router(runtime.router)
 
 supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_ANON_KEY"))
 
