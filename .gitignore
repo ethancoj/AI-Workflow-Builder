@@ -13,3 +13,6 @@ venv/
 # Node
 node_modules/
 .next/
+
+# docs: keep the report PDF private, share the markdown summaries
+docs/*.pdf

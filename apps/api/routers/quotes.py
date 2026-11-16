@@ -342,12 +342,13 @@ def _persist_assessment(*, assessment_id, merchant_id, rubric, image_bytes,
             path=image_path, file=image_bytes,
             file_options={"content-type": content_type},
         )
-        image_url = sb.storage.from_("quote-images").get_public_url(image_path)
+        # The bucket is private (NFR4), so store the object path, not a public URL.
+        # Use sb.storage.from_("quote-images").create_signed_url(path, expires_in) to view it later.
         sb.table("quote_assessments").insert({
             "id": assessment_id,
             "merchant_id": merchant_id,
             "rubric_id": rubric.id,
-            "image_url": image_url,
+            "image_path": image_path,
             "condition_level": vlm["condition_level"],
             "level_name": vlm["level_name"],
             "price_estimate": float(vlm["price_estimate"]),
