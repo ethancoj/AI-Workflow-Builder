@@ -1,44 +1,27 @@
 'use client'
 
-import { Bell, CalendarRange, Menu } from 'lucide-react'
-import AccountMenu from '@/components/auth/AccountMenu'
+import { Bell, CalendarRange } from 'lucide-react'
+import PageHeader from '@/components/shell/PageHeader'
 import type { DataSource } from '@/lib/dashboard/types'
 
 export default function OverviewHeader({
   source,
   onSourceChange,
-  merchantName,
-  onOpenNav,
 }: {
   source: DataSource
   onSourceChange: (s: DataSource) => void
-  merchantName?: string
-  onOpenNav: () => void
 }) {
   return (
-    <header className="border-b border-line bg-surface">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-3 px-4 py-4 md:px-6">
-        <button
-          onClick={onOpenNav}
-          aria-label="Open navigation"
-          className="rounded-md p-1.5 text-ink hover:bg-page focus-visible:ring-2 focus-visible:ring-teal md:hidden"
-        >
-          <Menu className="h-5 w-5" aria-hidden />
-        </button>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-semibold text-ink">Overview</h1>
-            {source === 'demo' && (
-              <span className="rounded-full bg-amber-tint px-2.5 py-0.5 text-xs font-semibold text-amber-ink">
-                Demo data
-              </span>
-            )}
-          </div>
-          <p className="text-sm text-muted">AI Workflow Builder for SMEs</p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
+    <PageHeader
+      title="Overview"
+      subtitle="AI Workflow Builder for SMEs"
+      badge={
+        source === 'demo' && (
+          <span className="rounded-full bg-amber-tint px-2.5 py-0.5 text-xs font-semibold text-amber-ink">Demo data</span>
+        )
+      }
+      actions={
+        <>
           {/* Live vs sample data. Demo is for presentations and usability testing. */}
           <div role="group" aria-label="Data shown" className="inline-flex rounded-lg border border-line bg-page p-0.5 text-xs font-medium">
             {(['live', 'demo'] as const).map((s) => (
@@ -72,10 +55,8 @@ export default function OverviewHeader({
           >
             <Bell className="h-4 w-4" aria-hidden />
           </button>
-
-          <AccountMenu label={merchantName} />
-        </div>
-      </div>
-    </header>
+        </>
+      }
+    />
   )
 }

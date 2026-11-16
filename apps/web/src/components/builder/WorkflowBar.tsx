@@ -3,6 +3,7 @@
 import { useReactFlow } from '@xyflow/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import AccountMenu from '@/components/auth/AccountMenu'
+import { NavButton, useShell } from '@/components/shell/AppShell'
 import { DEFAULT_WORKFLOW_NAME, useBuilderStore } from '@/lib/workflow/builderStore'
 import {
   createWorkflow,
@@ -32,6 +33,7 @@ export default function WorkflowBar() {
   const dirty = useBuilderStore((s) => s.dirty)
   const setWorkflowName = useBuilderStore((s) => s.setWorkflowName)
   const { fitView } = useReactFlow()
+  const { merchantName } = useShell()
 
   const [workflows, setWorkflows] = useState<WorkflowSummary[] | null>(null)
   const [busy, setBusy] = useState(false)
@@ -140,24 +142,25 @@ export default function WorkflowBar() {
   }
 
   const buttonClass =
-    'rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50'
+    'rounded-lg border border-line bg-surface px-3 py-1.5 text-sm font-medium text-ink hover:bg-page focus-visible:ring-2 focus-visible:ring-teal disabled:opacity-50'
 
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 bg-white px-4 py-2 text-slate-800">
+    <div className="flex flex-wrap items-center gap-2 border-b border-line bg-surface px-4 py-2.5 text-ink">
+      <NavButton />
       <input
         value={workflowName}
         onChange={(e) => setWorkflowName(e.target.value)}
         placeholder={DEFAULT_WORKFLOW_NAME}
         aria-label="Workflow name"
-        className="w-56 rounded-md border border-transparent px-2 py-1.5 text-sm font-semibold hover:border-slate-300 focus:border-slate-400 focus:outline-none"
+        className="w-56 rounded-lg border border-transparent bg-transparent px-2 py-1.5 text-base font-semibold text-ink hover:border-line focus:border-teal focus:outline-none focus:ring-2 focus:ring-teal/20"
       />
-      <span className={`text-xs ${dirty ? 'text-amber-600' : 'text-slate-400'}`}>
+      <span className={`text-xs ${dirty ? 'font-medium text-amber-ink' : 'text-muted'}`}>
         {dirty ? '● Unsaved changes' : workflowId ? 'All changes saved' : 'Not saved yet'}
       </span>
 
       <div className="ml-auto flex items-center gap-2">
         {status && (
-          <span className={`max-w-xs truncate text-xs ${status.kind === 'ok' ? 'text-emerald-600' : 'text-rose-600'}`} title={status.text}>
+          <span className={`max-w-xs truncate text-xs ${status.kind === 'ok' ? 'text-emerald-700' : 'text-rose-700'}`} title={status.text}>
             {status.text}
           </span>
         )}
@@ -188,12 +191,12 @@ export default function WorkflowBar() {
         <button
           onClick={() => save(false)}
           disabled={busy}
-          className="rounded-md bg-blue-600 px-4 py-1.5 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-60"
+          className="rounded-lg bg-teal px-4 py-1.5 text-sm font-semibold text-white hover:bg-teal/90 focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 disabled:opacity-60"
         >
           {busy ? 'Working…' : 'Save'}
         </button>
-        <div className="ml-2 border-l border-slate-200 pl-3">
-          <AccountMenu beforeLogout={confirmDiscard} />
+        <div className="ml-2 border-l border-line pl-3">
+          <AccountMenu beforeLogout={confirmDiscard} label={merchantName} />
         </div>
       </div>
     </div>

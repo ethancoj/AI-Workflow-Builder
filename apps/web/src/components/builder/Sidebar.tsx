@@ -1,5 +1,6 @@
 import { NODE_META, NODE_ORDER } from '@/lib/workflow/nodeMeta'
 
+/** Palette of node types to drag onto the canvas. */
 export default function Sidebar() {
   const onDragStart = (event: React.DragEvent, nodeType: string) => {
     event.dataTransfer.setData('application/reactflow', nodeType)
@@ -7,38 +8,33 @@ export default function Sidebar() {
   }
 
   return (
-    <div style={{
-      width: '220px',
-      height: '100vh',
-      backgroundColor: '#1e1e1e',
-      padding: '20px 12px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '10px',
-      flexShrink: 0,
-    }}>
-      <p style={{ color: '#888', fontSize: '11px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-        Drag nodes onto canvas
-      </p>
-      {NODE_ORDER.map((type) => (
-        <div
-          key={type}
-          draggable
-          onDragStart={(e) => onDragStart(e, type)}
-          title={NODE_META[type].description}
-          style={{
-            backgroundColor: NODE_META[type].color,
-            color: 'white',
-            padding: '10px 14px',
-            borderRadius: '8px',
-            cursor: 'grab',
-            fontSize: '13px',
-            fontWeight: '500',
-          }}
-        >
-          {NODE_META[type].icon} {NODE_META[type].label}
-        </div>
-      ))}
-    </div>
+    <aside className="hidden w-56 shrink-0 flex-col gap-2 overflow-y-auto border-r border-line bg-surface p-4 sm:flex">
+      <h2 className="text-xs font-semibold uppercase tracking-wide text-muted">Add a step</h2>
+      <p className="mb-1 text-xs text-muted">Drag onto the canvas.</p>
+      {NODE_ORDER.map((type) => {
+        const meta = NODE_META[type]
+        return (
+          <div
+            key={type}
+            draggable
+            onDragStart={(e) => onDragStart(e, type)}
+            title={meta.description}
+            className="flex cursor-grab items-center gap-2.5 rounded-[10px] border border-line bg-surface px-3 py-2.5 hover:border-teal hover:bg-teal-soft active:cursor-grabbing"
+          >
+            <span
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-sm text-white"
+              style={{ backgroundColor: meta.color }}
+              aria-hidden
+            >
+              {meta.icon}
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-medium text-ink">{meta.label}</span>
+              <span className="block truncate text-xs text-muted">{meta.description}</span>
+            </span>
+          </div>
+        )
+      })}
+    </aside>
   )
 }

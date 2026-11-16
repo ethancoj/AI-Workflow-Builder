@@ -20,7 +20,7 @@ type NavItem = {
   unavailableReason?: string
 }
 
-const NAV: NavItem[] = [
+export const NAV: NavItem[] = [
   { label: 'Overview', Icon: LayoutDashboard, href: '/dashboard' },
   { label: 'Workflows', Icon: Workflow, href: '/builder' },
   { label: 'Quote Requests', Icon: Inbox, unavailableReason: 'A full quote inbox is coming soon. Recent quotes are on the Overview.' },
@@ -29,19 +29,34 @@ const NAV: NavItem[] = [
   { label: 'Settings', Icon: Settings, unavailableReason: 'Settings are coming soon.' },
 ]
 
-function SidebarContents({ active, onNavigate }: { active: string; onNavigate?: () => void }) {
+/**
+ * The navy navigation column. `compact` is an icon-only rail (used by the builder,
+ * which needs the width for its canvas); labels stay available as tooltips and to screen readers.
+ */
+function SidebarContents({ active, compact = false, onNavigate }: { active: string; compact?: boolean; onNavigate?: () => void }) {
   return (
     <div className="flex h-full flex-col bg-navy text-slate-200">
-      <div className="px-5 py-5">
-        <p className="text-base font-semibold text-white">AI Workflow Builder</p>
+      <div className={compact ? 'flex justify-center py-5' : 'px-5 py-5'}>
+        {compact ? (
+          <span
+            title="AI Workflow Builder"
+            className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal text-xs font-bold text-white"
+          >
+            AW
+            <span className="sr-only">AI Workflow Builder</span>
+          </span>
+        ) : (
+          <p className="text-base font-semibold text-white">AI Workflow Builder</p>
+        )}
       </div>
 
-      <nav aria-label="Main" className="flex-1 px-3">
+      <nav aria-label="Main" className={`flex-1 ${compact ? 'px-2' : 'px-3'}`}>
         <ul className="space-y-1">
           {NAV.map(({ label, Icon, href, unavailableReason }) => {
             const isActive = href === active
-            const base =
-              'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-teal-300'
+            const base = `flex w-full items-center rounded-lg py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-teal-300 ${
+              compact ? 'justify-center px-0' : 'gap-3 px-3'
+            }`
             return (
               <li key={label}>
                 {href ? (
@@ -49,19 +64,30 @@ function SidebarContents({ active, onNavigate }: { active: string; onNavigate?: 
                     href={href}
                     onClick={onNavigate}
                     aria-current={isActive ? 'page' : undefined}
+                    title={compact ? label : undefined}
                     className={`${base} ${isActive ? 'bg-teal font-medium text-white' : 'hover:bg-navy-soft hover:text-white'}`}
                   >
                     <Icon className="h-4 w-4 shrink-0" aria-hidden />
-                    {label}
+                    {compact ? <span className="sr-only">{label}</span> : label}
                   </Link>
                 ) : (
                   // Not built yet: visible but clearly unavailable, with the reason on hover and for screen readers.
-                  <span aria-disabled="true" title={unavailableReason} className={`${base} cursor-not-allowed text-slate-400`}>
+                  <span
+                    aria-disabled="true"
+                    title={compact ? `${label}: ${unavailableReason}` : unavailableReason}
+                    className={`${base} cursor-not-allowed text-slate-400`}
+                  >
                     <Icon className="h-4 w-4 shrink-0" aria-hidden />
-                    <span className="flex-1">{label}</span>
-                    <span className="rounded bg-navy-soft px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-slate-300">
-                      Soon
-                    </span>
+                    {compact ? (
+                      <span className="sr-only">{label} (coming soon)</span>
+                    ) : (
+                      <>
+                        <span className="flex-1">{label}</span>
+                        <span className="rounded bg-navy-soft px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-slate-300">
+                          Soon
+                        </span>
+                      </>
+                    )}
                     <span className="sr-only">: {unavailableReason}</span>
                   </span>
                 )}
@@ -71,24 +97,33 @@ function SidebarContents({ active, onNavigate }: { active: string; onNavigate?: 
         </ul>
       </nav>
 
-      <div className="space-y-3 border-t border-navy-soft px-5 py-4 text-xs">
-        <p className="flex items-center gap-2 text-slate-300">
+      {compact ? (
+        <div className="flex justify-center border-t border-navy-soft py-4" title="WhatsApp setup pending · Supported by Fylix">
           <span className="h-2 w-2 rounded-full bg-amber-400" aria-hidden />
-          WhatsApp setup pending
-        </p>
-        <p className="text-slate-400">Supported by Fylix</p>
-      </div>
+          <span className="sr-only">WhatsApp setup pending. Supported by Fylix.</span>
+        </div>
+      ) : (
+        <div className="space-y-3 border-t border-navy-soft px-5 py-4 text-xs">
+          <p className="flex items-center gap-2 text-slate-300">
+            <span className="h-2 w-2 rounded-full bg-amber-400" aria-hidden />
+            WhatsApp setup pending
+          </p>
+          <p className="text-slate-400">Supported by Fylix</p>
+        </div>
+      )}
     </div>
   )
 }
 
-/** Fixed sidebar from md up; a slide-in drawer on phones (controlled by the page). */
-export default function DashboardSidebar({
+/** Fixed sidebar from md up (full or compact rail); a slide-in drawer with full labels on phones. */
+export default function AppSidebar({
   active,
+  compact = false,
   drawerOpen,
   onCloseDrawer,
 }: {
   active: string
+  compact?: boolean
   drawerOpen: boolean
   onCloseDrawer: () => void
 }) {
@@ -101,8 +136,8 @@ export default function DashboardSidebar({
 
   return (
     <>
-      <aside className="sticky top-0 hidden h-screen w-56 shrink-0 md:block">
-        <SidebarContents active={active} />
+      <aside className={`sticky top-0 hidden h-screen shrink-0 md:block ${compact ? 'w-16' : 'w-56'}`}>
+        <SidebarContents active={active} compact={compact} />
       </aside>
 
       {drawerOpen && (

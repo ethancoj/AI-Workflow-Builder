@@ -19,6 +19,7 @@
   --color-navy-soft: var(--navy-soft);
   --color-teal: var(--teal);
   --color-teal-ink: var(--teal-ink);
+  --color-teal-soft: var(--teal-soft);
   --color-amber-tint: var(--amber-tint);
   --color-amber-line: var(--amber-line);
   --color-amber-ink: var(--amber-ink);
@@ -40,6 +41,7 @@
   --navy-soft: #22324b;
   --teal: #0f6565;
   --teal-ink: #0f6565;
+  --teal-soft: #e3f1f0;
   --amber-tint: #fff1cf;
   --amber-line: #f5d78e;
   --amber-ink: #78350f;
@@ -57,6 +59,7 @@
     --navy-soft: #1a2536;
     --teal: #13756f;
     --teal-ink: #5cc8bf;
+    --teal-soft: #13302f;
     --amber-tint: #33290f;
     --amber-line: #5c4a1a;
     --amber-ink: #f8d48a;

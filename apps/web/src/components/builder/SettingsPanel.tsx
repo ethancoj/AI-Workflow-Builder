@@ -16,14 +16,14 @@ import type {
 } from '@/lib/workflow/types'
 
 const inputClass =
-  'w-full rounded-md border border-neutral-600 bg-neutral-800 px-2.5 py-2 text-sm text-white placeholder:text-neutral-500 focus:border-neutral-400 focus:outline-none'
+  'w-full rounded-lg border border-line bg-surface px-2.5 py-2 text-sm text-ink placeholder:text-muted focus:border-teal focus:outline-none focus:ring-2 focus:ring-teal/20'
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return (
     <label className="block space-y-1.5">
-      <span className="text-xs font-medium text-neutral-300">{label}</span>
+      <span className="text-xs font-medium text-ink">{label}</span>
       {children}
-      {hint && <span className="block text-xs text-neutral-500">{hint}</span>}
+      {hint && <span className="block text-xs text-muted">{hint}</span>}
     </label>
   )
 }
@@ -37,9 +37,9 @@ export default function SettingsPanel() {
   const { deleteElements } = useReactFlow()
 
   return (
-    <aside className="flex h-screen w-80 shrink-0 flex-col overflow-y-auto bg-[#1e1e1e] p-5 text-white">
+    <aside className="hidden w-72 shrink-0 flex-col overflow-y-auto border-l border-line bg-surface p-5 text-ink md:flex lg:w-80">
       {!node ? (
-        <p className="text-sm text-neutral-400">Click a node on the canvas to edit its settings.</p>
+        <p className="text-sm text-muted">Click a node on the canvas to edit its settings.</p>
       ) : (
         // key resets local form state when switching between nodes
         <div key={node.id} className="space-y-5">
@@ -47,14 +47,14 @@ export default function SettingsPanel() {
             <h2 className="text-base font-semibold" style={{ color: NODE_META[node.type].color }}>
               {NODE_META[node.type].icon} {NODE_META[node.type].label}
             </h2>
-            <p className="text-xs text-neutral-400">{NODE_META[node.type].description}</p>
+            <p className="text-xs text-muted">{NODE_META[node.type].description}</p>
           </header>
 
           <NodeForm node={node} />
 
           <button
             onClick={() => deleteElements({ nodes: [{ id: node.id }] })}
-            className="w-full rounded-md border border-rose-800 py-2 text-sm text-rose-400 hover:bg-rose-950"
+            className="w-full rounded-lg border border-rose-200 py-2 text-sm font-medium text-rose-700 hover:bg-rose-50"
           >
             Delete node
           </button>
@@ -154,9 +154,9 @@ function ConditionForm({ node }: { node: ConditionNode }) {
 
   return (
     <div className="space-y-4">
-      <p className="text-xs text-neutral-400">
+      <p className="text-xs text-muted">
         Each branch is checked in order, top to bottom. The first match wins. If nothing matches, the
-        <span className="text-neutral-200"> Otherwise</span> path is used.
+        <span className="text-ink"> Otherwise</span> path is used.
       </p>
       <datalist id="intent-suggestions">
         {INTENT_SUGGESTIONS.map((i) => (
@@ -164,12 +164,12 @@ function ConditionForm({ node }: { node: ConditionNode }) {
         ))}
       </datalist>
       {branches.map((b, i) => (
-        <div key={b.id} className="space-y-2 rounded-md border border-neutral-700 p-3">
+        <div key={b.id} className="space-y-2 rounded-md border border-line p-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-neutral-300">Branch {i + 1}</span>
+            <span className="text-xs font-medium text-ink">Branch {i + 1}</span>
             <button
               onClick={() => removeBranch(node.id, b.id)}
-              className="text-xs text-neutral-500 hover:text-rose-400"
+              className="text-xs text-muted hover:text-rose-700"
             >
               Remove
             </button>
@@ -193,7 +193,7 @@ function ConditionForm({ node }: { node: ConditionNode }) {
       ))}
       <button
         onClick={() => update(node.id, { branches: [...branches, { id: newId('branch'), match: 'intent', value: '' }] })}
-        className="w-full rounded-md border border-dashed border-neutral-600 py-2 text-sm text-neutral-300 hover:border-neutral-400"
+        className="w-full rounded-md border border-dashed border-line py-2 text-sm text-ink hover:border-teal"
       >
         + Add branch
       </button>
@@ -226,13 +226,13 @@ function QuoteForm({ node }: { node: QuoteNode }) {
     <div className="space-y-4">
       <Field label="Pricing rubric" hint="The AI compares the customer's photo against this rubric to pick a price.">
         {error ? (
-          <p className="text-xs text-rose-400">
+          <p className="text-xs text-rose-700">
             Couldn&apos;t load rubrics ({error}). Check that the API server is running.
           </p>
         ) : !rubrics ? (
-          <p className="text-xs text-neutral-500">Loading rubrics…</p>
+          <p className="text-xs text-muted">Loading rubrics…</p>
         ) : rubrics.length === 0 ? (
-          <p className="text-xs text-amber-400">
+          <p className="text-xs text-amber-ink">
             No saved rubrics yet. Create one on the{' '}
             <a href="/quotes" target="_blank" className="underline">
               Quotes page
@@ -257,9 +257,9 @@ function QuoteForm({ node }: { node: QuoteNode }) {
           </select>
         )}
       </Field>
-      <p className="text-xs text-neutral-400">
-        This node has two exits. <span className="text-emerald-400">Quoted</span> is used when the AI is confident.{' '}
-        <span className="text-rose-400">Needs human review</span> is used when its confidence is below the
+      <p className="text-xs text-muted">
+        This node has two exits. <span className="text-emerald-700">Quoted</span> is used when the AI is confident.{' '}
+        <span className="text-rose-700">Needs human review</span> is used when its confidence is below the
         rubric&apos;s escalation threshold.
       </p>
     </div>
