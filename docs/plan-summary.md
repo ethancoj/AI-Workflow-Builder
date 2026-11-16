@@ -130,6 +130,7 @@ Runtime flow (FYP2 target):
 - Settings form for every node type, with the config saved in the workflow JSON (`{version: 1, nodes, edges}`). Condition branches and the Quote node's quoted/escalated exits are separate edge handles.
 - Builder state in Zustand (`src/lib/workflow/builderStore.ts`)
 - Rubrics can be saved from `/quotes` and picked in a Quote node
+- Workflow bar: name, open saved workflows, save/update in place, save as copy, unsaved-change warnings, `?id=` in the URL
 - Supabase schema for the quote engine in `supabase/migrations/`: `rubrics`, `quote_assessments` (backend-only via RLS), and the private `quote-images` bucket. Photos are stored by path.
 
 ### Alignment tasks (small)
@@ -140,7 +141,6 @@ Runtime flow (FYP2 target):
 - Add RLS policies for `workflows`. It's written from the browser with the anon key, so policies should restrict rows to the logged-in merchant once auth exists.
 
 ### To build
-- Load and update saved workflows (currently each save inserts a new row)
 - Merchant auth and accounts, replacing `PLACEHOLDER_MERCHANT_ID`
 - The translation layer and workflow runtime engine (Obj 5), the core contribution
 - The Twilio WhatsApp webhook and send/receive (FR1.3, FR2.1 via WhatsApp)
@@ -150,7 +150,7 @@ Runtime flow (FYP2 target):
 - Integration with NLU and scheduling (Wang Ruoxu's modules)
 
 ### Suggested order
-1. Load and update saved workflows, then basic merchant auth
+1. Merchant auth (Supabase Auth) with RLS on all merchant tables
 2. The translation layer and runtime engine, tested with a mock message endpoint first
 3. The Twilio sandbox webhook, with photos routed to `/api/quotes/assess`
 4. The evaluation harness (independent, so it can run in parallel)
