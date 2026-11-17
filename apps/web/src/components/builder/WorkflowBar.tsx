@@ -158,8 +158,9 @@ export default function WorkflowBar() {
         aria-label="Workflow name"
         className="w-56 rounded-lg border border-transparent bg-transparent px-2 py-1.5 text-base font-semibold text-ink hover:border-line hover:bg-brand-soft/60 focus:border-brand focus:bg-surface focus:outline-none focus:ring-2 focus:ring-brand/20"
       />
-      <span className={`text-xs ${dirty ? 'font-medium text-highlight-ink' : 'text-muted'}`}>
-        {dirty ? '● Unsaved changes' : workflowId ? 'All changes saved' : 'Not saved yet'}
+      <span className={`flex items-center gap-1.5 text-xs ${dirty ? 'font-medium text-highlight-ink' : 'text-muted'}`}>
+        {dirty && <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden />}
+        {dirty ? 'Unsaved changes' : workflowId ? 'All changes saved' : 'Not saved yet'}
       </span>
 
       <div className="ml-auto flex items-center gap-2">

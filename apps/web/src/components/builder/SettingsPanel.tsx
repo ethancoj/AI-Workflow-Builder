@@ -1,6 +1,7 @@
 'use client'
 
 import { useReactFlow } from '@xyflow/react'
+import { MousePointerClick, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { apiErrorMessage, apiFetch } from '@/lib/api'
 import { useBuilderStore } from '@/lib/workflow/builderStore'
@@ -39,28 +40,47 @@ export default function SettingsPanel() {
   return (
     <aside className="hidden w-72 shrink-0 flex-col overflow-y-auto border-l border-line bg-surface p-5 text-ink md:flex lg:w-80">
       {!node ? (
-        <p className="text-sm text-muted">Click a step on the canvas to change its settings.</p>
+        <div className="space-y-3 pt-6 text-center">
+          <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-full border border-line" aria-hidden>
+            <MousePointerClick className="h-5 w-5 text-ink" />
+          </span>
+          <p className="text-sm font-medium text-ink">Click a step to change its settings</p>
+          <p className="text-xs text-muted">
+            Its settings open here. To try your workflow as a customer, use Test chat at the top.
+          </p>
+        </div>
       ) : (
         // key resets local form state when switching between nodes
         <div key={node.id} className="space-y-5">
-          <header className="space-y-1">
-            <h2 className="text-base font-semibold" style={{ color: NODE_META[node.type].color }}>
-              {NODE_META[node.type].icon} {NODE_META[node.type].label}
-            </h2>
-            <p className="text-xs text-muted">{NODE_META[node.type].description}</p>
-          </header>
+          <StepHeader node={node} />
 
           <NodeForm node={node} />
 
           <button
             onClick={() => deleteElements({ nodes: [{ id: node.id }] })}
-            className="w-full rounded-lg border border-rose-200 py-2 text-sm font-medium text-rose-700 hover:bg-rose-50"
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-rose-200 py-2 text-sm font-medium text-rose-700 hover:border-rose-300 hover:bg-rose-50 focus-visible:ring-2 focus-visible:ring-rose-600"
           >
+            <Trash2 className="h-4 w-4" aria-hidden />
             Delete this step
           </button>
         </div>
       )}
     </aside>
+  )
+}
+
+function StepHeader({ node }: { node: WorkflowNode }) {
+  const { Icon, label, description } = NODE_META[node.type]
+  return (
+    <header className="space-y-2 border-b border-divider pb-4">
+      <h2 className="flex items-center gap-2 text-base font-semibold text-ink">
+        <span className="flex h-7 w-7 items-center justify-center rounded-md bg-brand text-brand-on" aria-hidden>
+          <Icon className="h-4 w-4" />
+        </span>
+        {label}
+      </h2>
+      <p className="text-xs text-muted">{description}</p>
+    </header>
   )
 }
 
@@ -164,7 +184,7 @@ function ConditionForm({ node }: { node: ConditionNode }) {
         ))}
       </datalist>
       {branches.map((b, i) => (
-        <div key={b.id} className="space-y-2 rounded-md border border-line p-3">
+        <div key={b.id} className="space-y-2 rounded-lg border border-line p-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-ink">Path {i + 1}</span>
             <button
@@ -198,9 +218,10 @@ function ConditionForm({ node }: { node: ConditionNode }) {
       ))}
       <button
         onClick={() => update(node.id, { branches: [...branches, { id: newId('branch'), match: 'intent', value: '' }] })}
-        className="w-full rounded-md border border-dashed border-line py-2 text-sm text-ink hover:border-brand"
+        className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-line py-2 text-sm font-medium text-ink hover:bg-brand-soft focus-visible:ring-2 focus-visible:ring-brand"
       >
-        + Add a path
+        <Plus className="h-4 w-4" aria-hidden />
+        Add a path
       </button>
     </div>
   )

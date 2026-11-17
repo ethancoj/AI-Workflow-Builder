@@ -4,7 +4,7 @@ import { ReactFlow, Background, Controls, MiniMap, useReactFlow } from '@xyflow/
 import '@xyflow/react/dist/style.css'
 import { useCallback } from 'react'
 import { useBuilderStore } from '@/lib/workflow/builderStore'
-import { NODE_META, isWorkflowNodeType } from '@/lib/workflow/nodeMeta'
+import { isWorkflowNodeType } from '@/lib/workflow/nodeMeta'
 import type { WorkflowNode } from '@/lib/workflow/types'
 import { nodeTypes } from './nodes'
 
@@ -48,10 +48,21 @@ export default function Canvas() {
         onDragOver={onDragOver}
         onDrop={onDrop}
         fitView
+        defaultEdgeOptions={{ style: { stroke: '#52525b', strokeWidth: 1.5 } }}
+        connectionLineStyle={{ stroke: '#0a0a0a', strokeWidth: 1.5, strokeDasharray: '4 3' }}
       >
-        <Background />
+        <Background color="#d4d4d8" gap={20} />
         <Controls />
-        <MiniMap<WorkflowNode> nodeColor={(n) => NODE_META[n.type].color} />
+        <MiniMap<WorkflowNode>
+          nodeColor="#f4f4f5"
+          nodeStrokeColor="#18181b"
+          nodeStrokeWidth={2}
+          nodeBorderRadius={6}
+          maskColor="rgb(244 244 245 / 0.7)"
+          pannable
+          zoomable
+          ariaLabel="Overview map of the workflow"
+        />
       </ReactFlow>
     </div>
   )

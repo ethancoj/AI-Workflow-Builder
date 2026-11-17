@@ -1,6 +1,6 @@
 'use client'
 
-import { ImagePlus, RotateCcw, Send, X } from 'lucide-react'
+import { AlertTriangle, ImageIcon, ImagePlus, RotateCcw, Send, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { apiErrorMessage, apiFetch } from '@/lib/api'
 import { useBuilderStore } from '@/lib/workflow/builderStore'
@@ -175,7 +175,8 @@ export default function TestChat() {
       >
         {photo && (
           <div className="flex items-center gap-2 rounded-lg border border-divider px-2 py-1.5 text-xs">
-            <span className="min-w-0 flex-1 truncate">📷 {photo.name}</span>
+            <ImageIcon className="h-3.5 w-3.5 shrink-0 text-muted" aria-hidden />
+            <span className="min-w-0 flex-1 truncate">{photo.name}</span>
             <button type="button" onClick={() => setPhoto(null)} className="text-muted hover:text-ink">
               Remove
             </button>
@@ -231,7 +232,10 @@ function ChatBubble({ item, showSteps }: { item: ChatItem; showSteps: boolean })
     if (item.tone === 'warning') {
       return (
         <div className="space-y-1 rounded-lg border border-dashed border-line bg-surface px-3 py-2 text-xs">
-          <p className="font-semibold text-ink">⚠ {item.text}</p>
+          <p className="flex items-start gap-1.5 font-semibold text-ink">
+            <AlertTriangle className="mt-px h-3.5 w-3.5 shrink-0 text-amber-700" aria-hidden />
+            {item.text}
+          </p>
           {item.trace && <Steps trace={item.trace} />}
         </div>
       )
