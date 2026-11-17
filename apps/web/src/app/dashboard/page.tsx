@@ -100,35 +100,29 @@ function Overview() {
           </p>
         )}
 
-        {/*
-          Phone: the review queue comes first (Attention-First Rule), then the numbers.
-          Desktop: numbers across the top; queue and recent quotes on the left; activity on the right.
-        */}
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,7fr)_minmax(0,3fr)] lg:grid-rows-[auto_auto_1fr]">
-          <div className="min-w-0 lg:col-start-1 lg:row-start-2 lg:self-start">
-            <QuoteReviewPanel
-              reviews={data.reviews}
-              receipt={source === 'demo' ? receipt : null}
-              onApprove={
-                source === 'demo'
-                  ? (id, price) =>
-                      applyDemo((d) => approveDemoQuote(d, id, price), `Sent RM${price} to ${customerName(id)}.`)
-                  : undefined
-              }
-              onAskForPhoto={
-                source === 'demo'
-                  ? (id) => applyDemo((d) => askForPhotoDemo(d, id), `Asked ${customerName(id)} for a clearer photo.`)
-                  : undefined
-              }
-            />
-          </div>
-          <div className="min-w-0 lg:col-span-2 lg:row-start-1">
-            <SummaryCards summary={data.summary} />
-          </div>
-          <div className="min-w-0 lg:col-start-1 lg:row-start-3 lg:self-start">
+        {/* The queue is the job: it leads, full width. Figures and history sit below it. */}
+        <QuoteReviewPanel
+          reviews={data.reviews}
+          receipt={source === 'demo' ? receipt : null}
+          onApprove={
+            source === 'demo'
+              ? (id, price) => applyDemo((d) => approveDemoQuote(d, id, price), `Sent RM${price} to ${customerName(id)}.`)
+              : undefined
+          }
+          onAskForPhoto={
+            source === 'demo'
+              ? (id) => applyDemo((d) => askForPhotoDemo(d, id), `Asked ${customerName(id)} for a clearer photo.`)
+              : undefined
+          }
+        />
+
+        <SummaryCards summary={data.summary} />
+
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,7fr)_minmax(0,3fr)]">
+          <div className="min-w-0">
             <RecentQuotesTable quotes={data.quotes} source={data.source} />
           </div>
-          <div className="min-w-0 space-y-4 lg:col-start-2 lg:row-span-2 lg:row-start-2 lg:self-start">
+          <div className="min-w-0 space-y-4">
             <WorkflowActivityPanel activity={data.workflowActivity} />
             <RecentActivityPanel events={data.events} />
           </div>

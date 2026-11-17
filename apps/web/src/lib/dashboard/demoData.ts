@@ -20,10 +20,11 @@ export function demoOverview(): OverviewData {
     summary: {
       status: 'ready',
       data: {
-        workflows: { value: 3, caption: 'saved · not live yet' },
-        quoteRequests: { value: 24, caption: 'photos received' },
-        awaitingReview: { value: 2, caption: 'the AI wasn’t sure about these' },
-        quotesSent: { value: 15, caption: 'sent to customers' },
+        // Consistent funnel: 24 photos → 15 quotes sent → 9 booked (matches the stage bars).
+        quoteRequests: { value: 24, caption: '' },
+        quotesSent: { value: 15, caption: '' },
+        booked: { value: 9, caption: '' },
+        workflows: { value: 3, caption: '' },
       },
     },
     quotes: { status: 'ready', data: quotes },
@@ -35,8 +36,8 @@ export function demoOverview(): OverviewData {
         stages: [
           { name: 'Greeting', count: 48 },
           { name: 'Photo requested', count: 31 },
-          { name: 'AI quote ready', count: 24 },
-          { name: 'Booked', count: 15 },
+          { name: 'Quote sent', count: 15 },
+          { name: 'Booked', count: 9 },
         ],
       },
     },
@@ -44,8 +45,7 @@ export function demoOverview(): OverviewData {
       status: 'ready',
       data: [
         { id: 'e3', kind: 'message', text: 'Priya Ramasamy sent a photo', at: minutesAgo(1) },
-        { id: 'e1', kind: 'review', text: 'Ahmad Faizal’s quote needs your review', at: minutesAgo(6) },
-        { id: 'e2', kind: 'quote', text: 'AI quote drafted for Tan Mei Ling: RM80', at: minutesAgo(22) },
+        { id: 'e6', kind: 'booking', text: 'Kumar Selvam booked a visit for Saturday, 10am', at: minutesAgo(30) },
                 { id: 'e4', kind: 'quote', text: 'Quote sent to Lim Wei Jie: RM150', at: minutesAgo(90) },
         { id: 'e5', kind: 'workflow', text: 'Workflow “Aircon quote bot” updated', at: minutesAgo(240) },
       ],
@@ -66,7 +66,7 @@ function resolveDemoQuote(
   const quote = data.reviews.data.find((q) => q.id === id)
   if (!quote) return data
   const { row, event, sent } = change(quote)
-  const { awaitingReview, quotesSent } = data.summary.data
+  const { quotesSent } = data.summary.data
   const bump = (m: { value: number | null; caption: string }, by: number) => ({ ...m, value: (m.value ?? 0) + by })
 
   return {
@@ -75,7 +75,6 @@ function resolveDemoQuote(
       status: 'ready',
       data: {
         ...data.summary.data,
-        awaitingReview: bump(awaitingReview, -1),
         quotesSent: sent ? bump(quotesSent, 1) : quotesSent,
       },
     },

@@ -36,8 +36,8 @@ export type Metric = { value: number | null; caption: string }
 export type Summary = {
   workflows: Metric
   quoteRequests: Metric
-  awaitingReview: Metric
   quotesSent: Metric
+  booked: Metric
 }
 
 export type WorkflowActivity =
@@ -46,7 +46,7 @@ export type WorkflowActivity =
 
 export type ActivityEvent = {
   id: string
-  kind: 'quote' | 'review' | 'workflow' | 'rubric' | 'message'
+  kind: 'quote' | 'review' | 'workflow' | 'rubric' | 'message' | 'booking'
   text: string
   at: string // ISO timestamp
 }

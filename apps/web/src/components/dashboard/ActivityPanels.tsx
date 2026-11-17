@@ -1,4 +1,4 @@
-import { AlertTriangle, Calculator, FileText, MessageCircle, Workflow, type LucideIcon } from 'lucide-react'
+import { AlertTriangle, Calculator, CalendarCheck, FileText, MessageCircle, Workflow, type LucideIcon } from 'lucide-react'
 import Link from 'next/link'
 import { fullDate, timeAgo } from '@/lib/dashboard/format'
 import type { ActivityEvent, Section, WorkflowActivity } from '@/lib/dashboard/types'
@@ -89,6 +89,7 @@ const EVENT_ICON: Record<ActivityEvent['kind'], LucideIcon> = {
   workflow: Workflow,
   rubric: Calculator,
   message: MessageCircle,
+  booking: CalendarCheck,
 }
 
 export function RecentActivityPanel({ events }: { events: Section<ActivityEvent[]> }) {

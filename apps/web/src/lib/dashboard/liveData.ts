@@ -1,6 +1,6 @@
 import { apiErrorMessage, apiFetch } from '@/lib/api'
 import { listWorkflows, type WorkflowSummary } from '@/lib/workflow/workflowsApi'
-import { capitalise, formatPrice } from './format'
+import { capitalise } from './format'
 import type { ActivityEvent, OverviewData, QuoteRow, Section } from './types'
 
 // Builds the Overview from the logged-in merchant's real data. What exists today:
@@ -78,19 +78,9 @@ export async function loadLiveOverview(): Promise<OverviewData> {
       events.push({ id: `r-${r.id}`, kind: 'rubric', text: `Pricing rubric “${r.name}” saved`, at: r.created_at }),
     )
   }
-  rows?.forEach((q) =>
-    events.push({
-      id: `q-${q.id}`,
-      kind: q.status === 'needs_review' ? 'review' : 'quote',
-      text:
-        q.status === 'needs_review'
-          ? `Test photo needs your review: ${q.service}`
-          : `AI quote from a test photo: ${q.service}, ${formatPrice(q.price)}`,
-      at: q.receivedAt,
-    }),
-  )
+  // Quote rows are already in the quotes table and review queue, so they aren't repeated here.
   events.sort((a, b) => b.at.localeCompare(a.at))
-  const allFailed = !workflows && rubricsR.status === 'rejected' && !rows
+  const allFailed = !workflows && rubricsR.status === 'rejected'
 
   return {
     source: 'live',
@@ -101,10 +91,8 @@ export async function loadLiveOverview(): Promise<OverviewData> {
           ? { value: workflows.length, caption: 'saved · not deployed yet' }
           : unavailable('Couldn’t load workflows'),
         quoteRequests: rows ? { value: rows.length, caption: 'photos assessed' } : unavailable('Couldn’t load quotes'),
-        awaitingReview: rows
-          ? { value: rows.filter((r) => r.status === 'needs_review').length, caption: 'the AI wasn’t sure about these' }
-          : unavailable('Couldn’t load quotes'),
         quotesSent: unavailable('Available once WhatsApp is connected'),
+        booked: unavailable('Available once WhatsApp is connected'),
       },
     },
     quotes: quotesSection,
