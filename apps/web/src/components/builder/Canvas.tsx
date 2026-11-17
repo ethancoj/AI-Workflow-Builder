@@ -48,6 +48,7 @@ export default function Canvas() {
         onDragOver={onDragOver}
         onDrop={onDrop}
         fitView
+        fitViewOptions={{ padding: 0.25, maxZoom: 1 }}
         defaultEdgeOptions={{ style: { stroke: '#52525b', strokeWidth: 1.5 } }}
         connectionLineStyle={{ stroke: '#0a0a0a', strokeWidth: 1.5, strokeDasharray: '4 3' }}
       >

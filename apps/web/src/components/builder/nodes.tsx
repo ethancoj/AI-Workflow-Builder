@@ -44,7 +44,7 @@ function NodeCard({
   const waiting = useTestRunStore((s) => s.waitingNodeId === id)
   return (
     <div
-      className={`relative w-60 rounded-[10px] border border-line bg-surface text-ink shadow-sm transition-[box-shadow] duration-200 hover:shadow-md ${
+      className={`relative ${type === 'start' ? 'w-36' : 'w-60'} rounded-[10px] border border-line bg-surface text-ink shadow-sm transition-[box-shadow] duration-200 hover:shadow-md ${
         selected ? 'ring-2 ring-brand ring-offset-2' : ran || waiting ? 'ring-2 ring-brand/70 ring-offset-2' : ''
       }`}
     >

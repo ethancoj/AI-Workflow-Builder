@@ -29,7 +29,7 @@ export default function Sidebar() {
             </span>
             <span className="min-w-0">
               <span className="block text-sm font-medium text-ink">{label}</span>
-              <span className="block line-clamp-2 text-xs text-muted">{description}</span>
+              <span className="block truncate text-xs text-muted">{description}</span>
             </span>
           </div>
         )
