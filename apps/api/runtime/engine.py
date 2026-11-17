@@ -54,9 +54,9 @@ QUOTE_ESCALATED = "escalated"
 NEEDS_FRESH_INPUT = {"llm", "condition", "quote"}
 
 SAFETY_NET_REPLY = "Thanks for your message! Someone from our team will get back to you shortly."
-ASK_FOR_PHOTO = "Could you send a clear photo of the unit? I'll use it to estimate the price."
+ASK_FOR_PHOTO = "Could you send a clear photo of the item? I'll use it to estimate the price."
 ASK_FOR_CLEARER_PHOTO = (
-    "Sorry, I couldn't make out the unit in that photo. Could you send another one, "
+    "Sorry, I couldn't make it out in that photo. Could you send another one, "
     "taken closer and in good light?"
 )
 
@@ -151,8 +151,8 @@ def quote_message(outcome: QuoteOutcome) -> str:
     """Customer-facing quote: natural wording, clearly an estimate, and an obvious next step."""
     return (
         f"Thanks for the photo! From what I can see, it matches our “{outcome.level_name}” level. "
-        f"The estimated price is RM{outcome.price:.0f}. Our technician will confirm the final price on site. "
-        "Would you like to book a visit?"
+        f"The estimated price is RM{outcome.price:.0f}. We'll confirm the final price when we see it in person. "
+        "Would you like to make a booking?"
     )
 
 

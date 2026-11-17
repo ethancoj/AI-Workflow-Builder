@@ -17,6 +17,7 @@ type AssessmentRow = {
   escalated: boolean
   created_at: string
   image_url?: string
+  reasoning?: string
 }
 
 async function getJson<T>(path: string): Promise<T> {
@@ -41,6 +42,7 @@ function toQuoteRow(a: AssessmentRow, rubrics: Map<string, RubricRow>): QuoteRow
     confidence: a.confidence,
     level: a.level_name,
     photoUrl: a.image_url,
+    reasoning: a.reasoning || undefined,
   }
 }
 

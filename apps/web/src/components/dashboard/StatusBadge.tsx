@@ -3,7 +3,7 @@ import type { QuoteStatus } from '@/lib/dashboard/types'
 
 // Each status has an icon AND a text label, so it reads correctly without colour.
 const STATUS = {
-  pending_ai: { label: 'Pending AI', Icon: Loader, className: 'border border-dashed border-muted text-muted' },
+  pending_ai: { label: 'AI is checking', Icon: Loader, className: 'border border-dashed border-muted text-muted' },
   draft: { label: 'Draft', Icon: FileText, className: 'border border-line text-ink' },
   sent: { label: 'Sent', Icon: CheckCircle2, className: 'border border-brand bg-brand text-brand-on' },
   needs_review: { label: 'Needs your review', Icon: AlertTriangle, className: 'border border-highlight-line bg-highlight font-semibold text-highlight-ink' },

@@ -31,6 +31,8 @@ export const DEFAULT_END_MESSAGE = 'Thanks for your message! Someone from our te
 
 export function checkWorkflow(nodes: WorkflowNode[], edges: Edge[]): Issue[] {
   const issues: Issue[] = []
+  // A brand-new canvas (just Start) isn't a mistake yet: the empty-canvas guide shows the next step.
+  if (edges.length === 0 && nodes.length === 1 && nodes[0].type === 'start') return issues
   const byId = new Map(nodes.map((n) => [n.id, n]))
   const out = (id: string, handle: string | null = null) =>
     edges.find((e) => e.source === id && (e.sourceHandle ?? null) === handle && byId.has(e.target))
