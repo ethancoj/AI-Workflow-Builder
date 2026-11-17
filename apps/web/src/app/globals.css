@@ -41,7 +41,7 @@
   --color-highlight-ink: var(--highlight-ink);
   --color-background: var(--page);
   --color-foreground: var(--ink);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-app-sans);
   --font-mono: var(--font-geist-mono);
 }
 
@@ -212,5 +212,5 @@
 body {
   background: var(--page);
   color: var(--ink);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-app-sans), Arial, Helvetica, sans-serif;
 }
