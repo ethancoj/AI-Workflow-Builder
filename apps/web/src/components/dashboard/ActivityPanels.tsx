@@ -9,7 +9,7 @@ export function WorkflowActivityPanel({ activity }: { activity: Section<Workflow
     <Panel
       title="Workflow activity"
       action={
-        <Link href="/builder" className="text-xs font-medium text-brand-ink underline-offset-2 hover:underline">
+        <Link href="/builder" className="inline-flex min-h-10 items-center text-xs font-medium text-brand-ink underline-offset-2 hover:underline">
           Open builder
         </Link>
       }
@@ -66,7 +66,7 @@ function WorkflowList({ workflows }: { workflows: { id: string; name: string; cr
             {w.openable ? (
               <Link
                 href={`/builder?id=${w.id}`}
-                className="shrink-0 rounded-md border border-line px-2.5 py-1 text-xs font-medium text-ink hover:bg-brand-soft focus-visible:ring-2 focus-visible:ring-brand"
+                className="inline-flex min-h-10 shrink-0 items-center rounded-md border border-line px-3 text-xs font-medium text-ink hover:bg-brand-soft focus-visible:ring-2 focus-visible:ring-brand"
               >
                 Open
               </Link>

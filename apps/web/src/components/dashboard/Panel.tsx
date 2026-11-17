@@ -80,7 +80,7 @@ export function SectionBody<T>({
         {retry && (
           <button
             onClick={retry}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1 text-xs font-medium text-ink hover:bg-brand-soft focus-visible:ring-2 focus-visible:ring-brand"
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-line px-3 text-xs font-medium text-ink hover:bg-brand-soft focus-visible:ring-2 focus-visible:ring-brand"
           >
             <RotateCcw className="h-3.5 w-3.5" aria-hidden />
             Try again

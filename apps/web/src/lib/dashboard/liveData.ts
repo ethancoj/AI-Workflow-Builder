@@ -90,9 +90,12 @@ export async function loadLiveOverview(): Promise<OverviewData> {
         workflows: workflows
           ? { value: workflows.length, caption: 'saved · not deployed yet' }
           : unavailable('Couldn’t load workflows'),
-        quoteRequests: rows ? { value: rows.length, caption: 'photos assessed' } : unavailable('Couldn’t load quotes'),
-        quotesSent: unavailable('Available once WhatsApp is connected'),
-        booked: unavailable('Available once WhatsApp is connected'),
+        // No customers yet: every row is a test photo from the Pricing Rubric page, so say so.
+        quoteRequests: rows
+          ? { value: rows.length, caption: '', label: 'Photos tested' }
+          : unavailable('Couldn’t load quotes'),
+        quotesSent: unavailable('Needs WhatsApp'),
+        booked: unavailable('Needs WhatsApp'),
       },
     },
     quotes: quotesSection,

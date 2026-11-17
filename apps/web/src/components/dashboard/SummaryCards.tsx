@@ -14,12 +14,16 @@ const STATS: { key: keyof Summary; label: string }[] = [
 function Stat({ label, metric }: { label: string; metric?: Metric }) {
   return (
     <div className="min-w-0 py-1">
-      <dt className="text-xs text-muted">{label}</dt>
+      <dt className="text-xs text-muted">{metric?.label ?? label}</dt>
       <dd className="mt-0.5">
         {metric ? (
           <>
-            <span className="block text-3xl font-semibold leading-tight tracking-tight tabular-nums text-ink">
-              {metric.value ?? <span className="text-muted" aria-label="Not available">—</span>}
+            <span className="block text-[28px] font-semibold leading-tight tracking-tight tabular-nums text-ink">
+              {metric.value ?? (
+                <span className="text-muted" role="img" aria-label="Not available">
+                  —
+                </span>
+              )}
             </span>
             {/* Only explain a missing figure; real numbers speak for themselves. */}
             {metric.value === null && <span className="mt-0.5 block text-xs text-muted">{metric.caption}</span>}

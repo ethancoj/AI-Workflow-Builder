@@ -1,7 +1,7 @@
 'use client'
 
 import { Info } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import RequireAuth from '@/components/auth/RequireAuth'
 import { RecentActivityPanel, WorkflowActivityPanel } from '@/components/dashboard/ActivityPanels'
 import OverviewHeader from '@/components/dashboard/OverviewHeader'
@@ -24,7 +24,6 @@ const LOADING: OverviewData = {
 }
 
 const SOURCE_KEY = 'overview-source'
-const RECEIPT_MS = 8000
 
 function Overview() {
   const [source, setSource] = useState<DataSource>('live')
@@ -32,7 +31,6 @@ function Overview() {
   // Demo data lives in state so demo review actions can change it (on screen only).
   const [demo, setDemo] = useState<OverviewData>(demoOverview)
   const [receipt, setReceipt] = useState<ReviewReceipt | null>(null)
-  const receiptTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   // Remember the live/demo choice per browser (a convenience only; defaults to live).
   useEffect(() => {
@@ -62,22 +60,17 @@ function Overview() {
     fetchLive()
   }, [fetchLive])
 
-  useEffect(() => () => clearTimeout(receiptTimer.current), [])
-
-  /** Demo review actions: apply the change, then offer Undo for a few seconds. */
+  /** Demo review actions: apply the change and offer Undo until the next action. */
   const applyDemo = (change: (d: OverviewData) => OverviewData, text: string) => {
     const before = demo
     setDemo(change(demo))
-    clearTimeout(receiptTimer.current)
     setReceipt({
       text,
       onUndo: () => {
         setDemo(before)
         setReceipt(null)
-        clearTimeout(receiptTimer.current)
       },
     })
-    receiptTimer.current = setTimeout(() => setReceipt(null), RECEIPT_MS)
   }
 
   const customerName = (id: string) =>
