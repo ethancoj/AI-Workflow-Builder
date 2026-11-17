@@ -194,7 +194,11 @@ function ReviewDialog({
   return (
     <dialog
       ref={ref}
-      onClose={onClose}
+      // React's dev double-run opens, closes, then reopens the dialog; the late "close" event from
+      // that first close must not dismiss it, so only react when the dialog really is closed.
+      onClose={() => {
+        if (!ref.current?.open) onClose()
+      }}
       aria-labelledby="review-title"
       className="m-auto max-h-[calc(100dvh-2rem)] w-[min(30rem,calc(100%-2rem))] rounded-[10px] border border-line bg-surface p-0 text-sm text-ink backdrop:bg-black/40"
     >
