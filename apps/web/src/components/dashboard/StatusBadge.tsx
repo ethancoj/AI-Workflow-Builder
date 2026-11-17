@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, Clock, FileText, Loader, type LucideIcon } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Clock, FileText, FlaskConical, Loader, type LucideIcon } from 'lucide-react'
 import type { QuoteStatus } from '@/lib/dashboard/types'
 
 // Shape carries the meaning (solid = done, outlined = needs you, dashed = not final),
@@ -20,6 +20,9 @@ const STATUS: Record<QuoteStatus, { label: string; Icon: LucideIcon; className: 
     className: 'border border-dashed border-muted text-muted',
     iconClass: 'motion-safe:animate-pulse',
   },
+  // Photos tested on the Pricing Rubric page (My data before WhatsApp): never sent to anyone.
+  test_sure: { label: 'Test · AI sure', Icon: FlaskConical, className: 'border border-dashed border-line text-muted' },
+  test_unsure: { label: 'Test · AI unsure', Icon: FlaskConical, className: 'border border-dashed border-muted text-ink' },
   // Merchant asked for a clearer photo; the next move is the customer's.
   waiting_customer: {
     label: 'Waiting for customer',

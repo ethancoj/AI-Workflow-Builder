@@ -8,10 +8,10 @@ const minutesAgo = (m: number) => new Date(Date.now() - m * 60_000).toISOString(
 export function demoOverview(): OverviewData {
   const quotes: QuoteRow[] = [
     { id: 'd3', customer: 'Priya Ramasamy', service: 'Aircon not cold', status: 'pending_ai', price: null, receivedAt: minutesAgo(1) },
-    { id: 'd1', customer: 'Ahmad Faizal', service: 'Aircon chemical wash', status: 'needs_review', price: { min: 120, max: 180 }, receivedAt: minutesAgo(6), confidence: 0.52, level: 'Moderately Dirty', photoUrl: '/demo/aircon-moderate.jpg', reasoning: 'Thick dust on the filter, but the photo is taken from an angle and the fins are only partly visible, so it could also be Heavily Soiled.' },
+    { id: 'd1', customer: 'Ahmad Faizal', service: 'Aircon chemical wash', status: 'needs_review', price: { min: 120, max: 180 }, receivedAt: minutesAgo(6), confidence: 0.52, threshold: 0.75, level: 'Moderately Dirty', photoUrl: '/demo/aircon-moderate.jpg', reasoning: 'Thick dust on the filter, but the photo is taken from an angle and the fins are only partly visible, so it could also be Heavily Soiled.' },
     { id: 'd2', customer: 'Tan Mei Ling', service: 'Aircon general service', status: 'draft', price: { min: 80 }, receivedAt: minutesAgo(22), confidence: 0.88, level: 'Clean / Light Dust' },
     { id: 'd4', customer: 'Lim Wei Jie', service: 'Aircon general service', status: 'sent', price: { min: 150 }, receivedAt: minutesAgo(95), confidence: 0.91, level: 'Moderately Dirty' },
-    { id: 'd5', customer: 'Nurul Aisyah', service: 'Aircon chemical wash', status: 'needs_review', price: { min: 180 }, receivedAt: minutesAgo(180), confidence: 0.47, level: 'Heavily Soiled / Mouldy', photoUrl: '/demo/aircon-heavy.jpg', reasoning: 'Dark patches that may be mould, but the photo is dim and blurry, so they could also be shadows.' },
+    { id: 'd5', customer: 'Nurul Aisyah', service: 'Aircon chemical wash', status: 'needs_review', price: { min: 180 }, receivedAt: minutesAgo(180), confidence: 0.47, threshold: 0.75, level: 'Heavily Soiled / Mouldy', photoUrl: '/demo/aircon-heavy.jpg', reasoning: 'Dark patches that may be mould, but the photo is dim and blurry, so they could also be shadows.' },
     { id: 'd6', customer: 'Kumar Selvam', service: 'Gas top-up', status: 'sent', price: { min: 100, max: 140 }, receivedAt: minutesAgo(320), confidence: 0.83 },
   ]
 

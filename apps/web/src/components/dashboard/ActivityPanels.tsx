@@ -7,7 +7,8 @@ import { Panel, SectionBody } from './Panel'
 export function WorkflowActivityPanel({ activity }: { activity: Section<WorkflowActivity> }) {
   return (
     <Panel
-      title="Workflow activity"
+      // Demo shows conversations per stage; My data (no WhatsApp yet) lists saved workflows.
+      title={activity.status === 'ready' && activity.data.kind === 'stages' ? 'Conversations by stage' : 'Your workflows'}
       action={
         <Link href="/builder" className="inline-flex min-h-10 items-center text-xs font-medium text-brand-ink underline-offset-2 hover:underline">
           Open builder

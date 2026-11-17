@@ -36,16 +36,27 @@ function Stat({ label, metric }: { label: string; metric?: Metric }) {
   )
 }
 
+const COLS: Record<number, string> = { 1: 'sm:grid-cols-1', 2: 'sm:grid-cols-2', 3: 'sm:grid-cols-3', 4: 'sm:grid-cols-4' }
+
 export default function SummaryCards({ summary }: { summary: Section<Summary> }) {
   const data = summary.status === 'ready' ? summary.data : undefined
+  // Figures that don't exist yet are named once in a footnote rather than shown as a row of "—".
+  const missing = data ? STATS.filter(({ key }) => data[key].value === null) : []
+  const shown = STATS.filter((s) => !missing.includes(s))
   return (
     <section aria-label="Summary" className="border-y border-divider py-3">
-      <dl className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4 sm:divide-x sm:divide-divider [&>*]:sm:pl-6 [&>*:first-child]:sm:pl-0">
-        {STATS.map(({ key, label }) => (
+      <dl
+        className={`grid grid-cols-2 gap-x-6 gap-y-3 ${COLS[shown.length] ?? 'sm:grid-cols-4'} sm:divide-x sm:divide-divider [&>*]:sm:pl-6 [&>*:first-child]:sm:pl-0`}
+      >
+        {shown.map(({ key, label }) => (
           <Stat key={key} label={label} metric={data?.[key]} />
         ))}
       </dl>
-      <p className="mt-2 text-xs text-muted">All figures are all-time.</p>
+      <p className="mt-2 text-xs text-muted">
+        All figures are all-time.
+        {missing.length > 0 &&
+          ` ${missing.map((m) => m.label).join(' and ')} start once WhatsApp is connected.`}
+      </p>
     </section>
   )
 }

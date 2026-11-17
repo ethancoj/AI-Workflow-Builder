@@ -28,6 +28,7 @@ export default function OverviewHeader({
             <button
               key={s}
               aria-pressed={source === s}
+              title={s === 'demo' ? 'A sample business, for demos and trying the review steps' : 'Your own business data'}
               onClick={() => onSourceChange(s)}
               className={`min-h-10 rounded-md px-3 focus-visible:ring-2 focus-visible:ring-brand ${
                 source === s ? 'bg-brand text-brand-on' : 'text-muted hover:text-ink'

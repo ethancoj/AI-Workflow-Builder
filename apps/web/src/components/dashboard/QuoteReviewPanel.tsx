@@ -177,6 +177,7 @@ function QueueRow({ quote: q, canReview, onOpen }: { quote: QuoteRow; canReview:
         </div>
         <button
           onClick={onOpen}
+          aria-label={`${canReview ? 'Review' : 'Open'} ${q.customer ? `${q.customer}’s quote` : 'this test photo'}`}
           className={`min-h-11 rounded-lg px-4 text-sm font-medium focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${
             canReview ? 'bg-brand text-brand-on hover:bg-brand/80' : 'border border-line bg-surface text-ink hover:bg-brand-soft'
           }`}
@@ -220,12 +221,15 @@ function suggestedPrice(q: QuoteRow): string {
 
 /** Why the quote is here, in words: the AI's own certainty, not a bare percentage. */
 function reasonText(q: QuoteRow): string {
-  const sure = q.confidence !== undefined ? `${Math.round(q.confidence * 100)}%` : null
-  if (q.confidence !== undefined && q.confidence < 0.4)
-    return 'The AI could barely tell the condition from this photo, so it didn’t send a price.'
-  return `The AI wasn’t sure enough${q.level ? ` that this is “${q.level}”` : ''} to send the price on its own${
-    sure ? ` (${sure} sure)` : ''
-  }.`
+  const pct = (n: number) => `${Math.round(n * 100)}%`
+  const sure =
+    q.confidence === undefined
+      ? ''
+      : q.threshold !== undefined
+        ? ` It was ${pct(q.confidence)} sure; you send automatically from ${pct(q.threshold)}.`
+        : ` It was ${pct(q.confidence)} sure.`
+  if (q.confidence !== undefined && q.confidence < 0.4) return `The AI could barely tell the condition from this photo.${sure}`
+  return `The AI wasn’t sure enough${q.level ? ` that this is “${q.level}”` : ''} to send the price on its own.${sure}`
 }
 
 /** True when the price is far from what the AI suggested, so a typo (RM1500 for RM150) gets a second look. */
@@ -261,9 +265,11 @@ function ReviewDialog({
   const isRange = quote.price?.max !== undefined && quote.price.max !== quote.price.min
   const readOnly = !onApprove
 
+  const priceRef = useRef<HTMLInputElement>(null)
   useEffect(() => {
     const dialog = ref.current
     dialog?.showModal()
+    if (window.matchMedia('(min-width: 640px)').matches) priceRef.current?.focus()
     return () => dialog?.close()
   }, [])
 
@@ -276,7 +282,7 @@ function ReviewDialog({
         if (!ref.current?.open) onClose()
       }}
       aria-labelledby="review-title"
-      className="m-auto max-h-[calc(100dvh-2rem)] w-[min(30rem,calc(100%-2rem))] rounded-[10px] border border-line bg-surface p-0 text-sm text-ink backdrop:bg-black/40"
+      className="m-auto max-h-[calc(100dvh-2rem)] w-[min(30rem,calc(100%-2rem))] overflow-y-auto rounded-[10px] border border-line bg-surface p-0 text-sm text-ink backdrop:bg-black/40"
     >
       <form
         onSubmit={(e) => {
@@ -286,7 +292,7 @@ function ReviewDialog({
       >
         <header className="border-b border-divider px-5 py-4">
           <div className="flex items-baseline justify-between gap-3">
-            <h2 id="review-title" className="text-base font-semibold">
+            <h2 id="review-title" tabIndex={-1} autoFocus className="text-base font-semibold outline-none">
               {readOnly ? 'Test photo' : `Review ${quote.customer ? `${quote.customer}’s` : 'this'} quote`}
             </h2>
             {position && position.of > 1 && (
@@ -344,8 +350,8 @@ function ReviewDialog({
                   RM
                 </span>
                 <input
+                  ref={priceRef}
                   id="final-price"
-                  autoFocus
                   inputMode="numeric"
                   value={price}
                   onChange={(e) => setPrice(e.target.value.replace(/[^\d.]/g, ''))}
@@ -373,7 +379,8 @@ function ReviewDialog({
           )}
         </div>
 
-        <footer className="flex flex-wrap items-center gap-2 border-t border-divider px-5 py-3">
+        {/* Pinned, so Approve is always reachable when the evidence makes the dialog scroll. */}
+        <footer className="sticky bottom-0 flex flex-wrap items-center gap-2 border-t border-divider bg-surface px-5 py-3">
           {onAskForPhoto && (
             <button
               type="button"
@@ -386,7 +393,6 @@ function ReviewDialog({
           <button
             type="button"
             onClick={onClose}
-            autoFocus={readOnly}
             className="ml-auto min-h-10 rounded-lg border border-line px-3 font-medium hover:bg-brand-soft focus-visible:ring-2 focus-visible:ring-brand"
           >
             {readOnly ? 'Close' : 'Cancel'}
@@ -398,7 +404,6 @@ function ReviewDialog({
               className="min-h-10 rounded-lg bg-brand px-3 font-medium text-brand-on hover:bg-brand/80 focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:opacity-50"
             >
               {valid ? `Approve & send RM${Math.round(value)}` : 'Approve & send'}
-              {position && position.of > 1 && <span className="font-normal opacity-80"> · next</span>}
             </button>
           )}
         </footer>

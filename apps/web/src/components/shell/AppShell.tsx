@@ -20,7 +20,7 @@ export function NavButton() {
     <button
       onClick={openNav}
       aria-label="Open navigation"
-      className="rounded-md p-1.5 text-ink hover:bg-brand-soft focus-visible:ring-2 focus-visible:ring-brand md:hidden"
+      className="flex min-h-11 min-w-11 items-center justify-center rounded-md text-ink hover:bg-brand-soft focus-visible:ring-2 focus-visible:ring-brand md:hidden"
     >
       <Menu className="h-5 w-5" aria-hidden />
     </button>

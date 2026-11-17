@@ -7,7 +7,7 @@ import type { ActivityEvent, OverviewData, QuoteRow, Section } from './types'
 // saved workflows (Supabase, RLS), rubrics and saved photo assessments (FastAPI).
 // No WhatsApp yet, so there are no customers, conversations or sent quotes.
 
-type RubricRow = { id: string; name: string; service_type: string; created_at: string }
+type RubricRow = { id: string; name: string; service_type: string; created_at: string; escalation_threshold?: number }
 type AssessmentRow = {
   id: string
   rubric_id: string | null
@@ -36,13 +36,14 @@ function toQuoteRow(a: AssessmentRow, rubrics: Map<string, RubricRow>): QuoteRow
     id: a.id,
     customer: null, // photos currently come from the Quotes test page, not customers
     service,
-    status: a.escalated ? 'needs_review' : 'draft',
+    status: a.escalated ? 'test_unsure' : 'test_sure',
     price: { min: a.price_estimate },
     receivedAt: a.created_at,
     confidence: a.confidence,
     level: a.level_name,
     photoUrl: a.image_url,
     reasoning: a.reasoning || undefined,
+    threshold: rubric?.escalation_threshold,
   }
 }
 
@@ -65,7 +66,7 @@ export async function loadLiveOverview(): Promise<OverviewData> {
     : { status: 'error', message: errorMessage(assessmentsR as PromiseRejectedResult) }
 
   const reviewsSection: Section<QuoteRow[]> = rows
-    ? { status: 'ready', data: rows.filter((r) => r.status === 'needs_review') }
+    ? { status: 'ready', data: rows.filter((r) => r.status === 'test_unsure') }
     : quotesSection
 
   // Recent activity is stitched together from whatever loaded.
