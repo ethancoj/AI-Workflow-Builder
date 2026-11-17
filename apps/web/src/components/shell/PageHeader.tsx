@@ -26,7 +26,7 @@ export default function PageHeader({
         <NavButton />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-semibold text-ink">{title}</h1>
+            <h1 className="text-[26px] font-bold leading-tight tracking-tight text-ink">{title}</h1>
             {badge}
           </div>
           {subtitle && <p className="text-sm text-muted">{subtitle}</p>}
