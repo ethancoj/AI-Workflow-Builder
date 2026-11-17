@@ -32,6 +32,8 @@ export default function QuoteReviewPanel({
 }) {
   const canReview = Boolean(onApprove)
   const [reviewing, setReviewing] = useState<QuoteRow | null>(null)
+  // Queue size when the merchant started reviewing, so "2 of 3" keeps counting as quotes leave.
+  const [startTotal, setStartTotal] = useState(0)
   const [showAll, setShowAll] = useState(false)
   const receiptRef = useRef<HTMLDivElement>(null)
 
@@ -101,7 +103,10 @@ export default function QuoteReviewPanel({
           <>
             <ul className="divide-y divide-divider">
               {(showAll ? rows : rows.slice(0, SHOWN)).map((q) => (
-                <QueueRow key={q.id} quote={q} canReview={canReview} onOpen={() => setReviewing(q)} />
+                <QueueRow key={q.id} quote={q} canReview={canReview} onOpen={() => {
+                    setStartTotal(rows.length)
+                    setReviewing(q)
+                  }} />
               ))}
             </ul>
             {rows.length > SHOWN && (
@@ -126,7 +131,9 @@ export default function QuoteReviewPanel({
         <ReviewDialog
           key={reviewing.id}
           quote={reviewing}
-          position={canReview ? { at: rows.findIndex((q) => q.id === reviewing.id) + 1, of: rows.length } : undefined}
+          position={canReview ? { at: startTotal - rows.length + 1, of: startTotal } : undefined}
+          // The last action's confirmation, shown inside the next quote's dialog so it isn't hidden behind it.
+          receipt={receipt}
           onClose={() => setReviewing(null)}
           onApprove={
             onApprove
@@ -247,12 +254,14 @@ function farFromEstimate(value: number, q: QuoteRow): boolean {
 function ReviewDialog({
   quote,
   position,
+  receipt,
   onClose,
   onApprove,
   onAskForPhoto,
 }: {
   quote: QuoteRow
   position?: { at: number; of: number }
+  receipt?: ReviewReceipt | null
   onClose: () => void
   onApprove?: (finalPrice: number) => void
   onAskForPhoto?: () => void
@@ -290,6 +299,19 @@ function ReviewDialog({
           if (onApprove && valid) onApprove(Math.round(value))
         }}
       >
+        {receipt && (
+          <div role="status" className="animate-arrive flex items-center gap-2 border-b border-divider bg-highlight px-5 py-2 text-sm">
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-700" aria-hidden />
+            <span className="min-w-0 flex-1">{receipt.text}</span>
+            <button
+              type="button"
+              onClick={receipt.onUndo}
+              className="min-h-10 rounded px-2 font-semibold underline underline-offset-4 hover:no-underline focus-visible:ring-2 focus-visible:ring-brand"
+            >
+              Undo
+            </button>
+          </div>
+        )}
         <header className="border-b border-divider px-5 py-4">
           <div className="flex items-baseline justify-between gap-3">
             <h2 id="review-title" tabIndex={-1} autoFocus className="text-base font-semibold outline-none">
