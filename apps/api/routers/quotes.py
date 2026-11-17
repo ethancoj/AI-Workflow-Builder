@@ -59,7 +59,7 @@ class Rubric(BaseModel):
     name: str
     service_type: str = "aircon"
     levels: list[RubricLevel]
-    escalation_threshold: float = 0.60
+    escalation_threshold: float = 0.75  # report: initialised at 0.75, tuned empirically
 
     @field_validator("levels")
     @classmethod
@@ -251,9 +251,9 @@ async def _call_claude(image_bytes: bytes, media_type: str, rubric: Rubric) -> d
 # ── Endpoint ──────────────────────────────────────────────────────────────────
 
 MODEL_LABELS = {
-    "gemini": "Gemini 1.5 Flash",
+    "gemini": "Gemini 2.0 Flash",
     "gpt4o": "GPT-4o Mini",
-    "claude": "Claude Haiku",
+    "claude": "Claude Haiku 4.5",
 }
 
 
@@ -297,7 +297,7 @@ def load_rubric(rubric_id: str, merchant_id: str) -> Optional[Rubric]:
     r = rows[0]
     return Rubric(
         id=r["id"], name=r["name"], service_type=r.get("service_type") or "aircon",
-        levels=r["levels"], escalation_threshold=r.get("escalation_threshold") or 0.6,
+        levels=r["levels"], escalation_threshold=r.get("escalation_threshold") or 0.75,
     )
 
 
@@ -309,7 +309,7 @@ MAX_IMAGE_BYTES = 10 * 1024 * 1024
 async def assess_photo(
     image: UploadFile = File(...),
     rubric_json: str = Form(...),
-    model: ModelChoice = Form("gemini"),
+    model: ModelChoice = Form("gpt4o"),
     save: bool = Form(False),  # persist photo + result for this merchant
     merchant_id: str = Depends(current_merchant_id),
 ) -> AssessmentResult:
@@ -332,8 +332,8 @@ async def assess_photo(
     escalation_reason = None
     if escalated:
         escalation_reason = (
-            f"AI confidence ({confidence:.0%}) is below the threshold "
-            f"({rubric.escalation_threshold:.0%}). Flagged for human review."
+            f"The AI is {confidence:.0%} sure, below your {rubric.escalation_threshold:.0%} confidence level, "
+            "so this quote needs your review before it goes to the customer."
         )
 
     # 6. Persist (optional)
