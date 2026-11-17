@@ -1,81 +1,107 @@
 'use client'
 
+import { AlertTriangle, Camera, CheckCircle2, ImageOff } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { formatPrice, fullDate, waitingFor } from '@/lib/dashboard/format'
 import type { QuoteRow, Section } from '@/lib/dashboard/types'
 import { Panel, SectionBody } from './Panel'
 
 export const REVIEW_QUEUE_ID = 'quotes-to-review'
+export const REVIEW_TITLE = 'Needs your review'
+const SHOWN = 5
+
+/** What just happened in the queue, shown as a short receipt with Undo (demo flow). */
+export type ReviewReceipt = { text: string; onUndo: () => void }
 
 /**
- * The queue of low-confidence AI quotes. `onApprove` is only passed when a review flow
- * exists for this data (today: demo data). Without it, the action is shown as unavailable.
+ * The queue of quotes the AI wasn't sure about, oldest first (they've waited longest).
+ * `onApprove` / `onAskForPhoto` are only passed when a review flow exists for this data
+ * (today: demo data). Without them, the action is shown as unavailable.
  */
 export default function QuoteReviewPanel({
   reviews,
   onApprove,
+  onAskForPhoto,
+  receipt,
 }: {
   reviews: Section<QuoteRow[]>
   onApprove?: (id: string, finalPrice: number) => void
+  onAskForPhoto?: (id: string) => void
+  receipt?: ReviewReceipt | null
 }) {
   const [reviewing, setReviewing] = useState<QuoteRow | null>(null)
+  const canReview = Boolean(onApprove)
 
   return (
-    <Panel
-      id={REVIEW_QUEUE_ID}
-      title="Quotes to review"
-      count={reviews.status === 'ready' ? reviews.data.length : undefined}
-    >
+    <Panel id={REVIEW_QUEUE_ID} title={REVIEW_TITLE} count={reviews.status === 'ready' ? reviews.data.length : undefined}>
+      {receipt && (
+        <div
+          role="status"
+          className="animate-arrive mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-line px-3 py-2 text-sm"
+        >
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-700" aria-hidden />
+          <span className="min-w-0 flex-1 text-ink">{receipt.text}</span>
+          <button
+            onClick={receipt.onUndo}
+            className="rounded font-semibold text-ink underline underline-offset-4 hover:no-underline focus-visible:ring-2 focus-visible:ring-brand"
+          >
+            Undo
+          </button>
+        </div>
+      )}
+
       <SectionBody
         section={reviews}
         isEmpty={(rows) => rows.length === 0}
-        empty="All caught up. Quotes the AI isn’t confident about will wait here for you."
+        empty="All caught up. When the AI isn’t sure about a price, the quote waits here for you."
       >
-        {(rows) => (
-          <>
-            <ul className="divide-y divide-divider">
-              {rows.map((q) => (
-                <li key={q.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 py-3 first:pt-0 last:pb-0">
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-ink">{q.customer ?? 'Test upload'}</p>
-                    <p className="text-sm text-muted">{q.service}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-muted">AI estimate</p>
-                    <p className="font-semibold tabular-nums text-ink">{formatPrice(q.price)}</p>
-                  </div>
-                  <div className="w-20 text-right">
-                    <p className="text-xs text-muted">Waiting</p>
-                    <time dateTime={q.receivedAt} title={fullDate(q.receivedAt)} className="font-medium text-ink">
-                      {waitingFor(q.receivedAt)}
-                    </time>
-                  </div>
-                  {onApprove ? (
-                    <button
-                      onClick={() => setReviewing(q)}
-                      className="rounded-lg bg-brand px-3 py-1.5 text-sm font-medium text-brand-on hover:bg-brand/85 focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
-                    >
-                      Review quote
-                    </button>
-                  ) : (
-                    <button
-                      disabled
-                      aria-describedby="review-unavailable"
-                      className="cursor-not-allowed rounded-lg border border-divider px-3 py-1.5 text-sm font-medium text-muted"
-                    >
-                      Review quote
-                    </button>
-                  )}
-                </li>
-              ))}
-            </ul>
-            {!onApprove && (
-              <p id="review-unavailable" className="mt-3 text-xs text-muted">
-                Reviewing real quotes arrives with the WhatsApp integration. Switch to Demo data to try the review flow.
-              </p>
-            )}
-          </>
-        )}
+        {(rows) => {
+          const oldestFirst = [...rows].sort((a, b) => a.receivedAt.localeCompare(b.receivedAt))
+          return (
+            <>
+              <ul className="divide-y divide-divider">
+                {oldestFirst.slice(0, SHOWN).map((q) => (
+                  <li key={q.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 py-3 first:pt-0 last:pb-0">
+                    <Thumb quote={q} />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-ink">{q.customer ?? 'Test photo'}</p>
+                      <p className="truncate text-sm text-muted">{q.level ? `AI thinks: ${q.level}` : q.service}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-muted">AI price</p>
+                      <p className="font-semibold tabular-nums text-ink">{formatPrice(q.price)}</p>
+                    </div>
+                    <div className="w-16 text-right">
+                      <p className="text-xs text-muted">Waiting</p>
+                      <time dateTime={q.receivedAt} title={fullDate(q.receivedAt)} className="font-medium text-ink">
+                        {waitingFor(q.receivedAt)}
+                      </time>
+                    </div>
+                    {canReview ? (
+                      <button
+                        onClick={() => setReviewing(q)}
+                        className="min-h-9 rounded-lg bg-brand px-3 py-1.5 text-sm font-medium text-brand-on hover:bg-brand/80 focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 max-sm:w-full"
+                      >
+                        Review quote
+                      </button>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+              {rows.length > SHOWN && (
+                <p className="mt-3 text-xs text-muted">
+                  Showing the {SHOWN} that have waited longest, of {rows.length}.
+                </p>
+              )}
+              {!canReview && (
+                <p className="mt-3 rounded-lg border border-dashed border-line px-3 py-2 text-xs text-muted">
+                  These are from test photos. Approving and sending prices to customers starts once WhatsApp is connected.
+                  To try the review steps now, switch to Demo data at the top.
+                </p>
+              )}
+            </>
+          )
+        }}
       </SectionBody>
 
       {reviewing && onApprove && (
@@ -86,9 +112,32 @@ export default function QuoteReviewPanel({
             onApprove(reviewing.id, price)
             setReviewing(null)
           }}
+          onAskForPhoto={
+            onAskForPhoto
+              ? () => {
+                  onAskForPhoto(reviewing.id)
+                  setReviewing(null)
+                }
+              : undefined
+          }
         />
       )}
     </Panel>
+  )
+}
+
+/** Small photo in the queue; a camera tile when there's no photo to show. */
+function Thumb({ quote }: { quote: QuoteRow }) {
+  if (quote.photoUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- signed URL to a private photo, not optimisable
+      <img src={quote.photoUrl} alt="" className="h-11 w-11 shrink-0 rounded-md border border-line object-cover" />
+    )
+  }
+  return (
+    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-divider bg-brand-soft" aria-hidden>
+      <Camera className="h-4 w-4 text-muted" />
+    </span>
   )
 }
 
@@ -99,20 +148,42 @@ function suggestedPrice(q: QuoteRow): string {
   return String(max !== undefined ? Math.round((min + max) / 2) : min)
 }
 
+/** Why the quote is here, in words: the AI's own certainty, not a bare percentage. */
+function reasonText(q: QuoteRow): string {
+  const sure = q.confidence !== undefined ? `${Math.round(q.confidence * 100)}%` : null
+  if (q.confidence !== undefined && q.confidence < 0.4)
+    return 'The AI could barely tell the condition from this photo, so it didn’t send a price.'
+  return `The AI wasn’t sure enough${q.level ? ` that this is “${q.level}”` : ''} to send the price on its own${
+    sure ? ` (${sure} sure)` : ''
+  }.`
+}
+
+/** True when the price is far from what the AI suggested, so a typo (RM1500 for RM150) gets a second look. */
+function farFromEstimate(value: number, q: QuoteRow): boolean {
+  if (!q.price) return false
+  const low = q.price.min
+  const high = q.price.max ?? q.price.min
+  return value < low * 0.5 || value > high * 1.5
+}
+
 /** Native <dialog>: gives focus trapping, Esc to close and a backdrop for free. */
 function ReviewDialog({
   quote,
   onClose,
   onApprove,
+  onAskForPhoto,
 }: {
   quote: QuoteRow
   onClose: () => void
   onApprove: (finalPrice: number) => void
+  onAskForPhoto?: () => void
 }) {
   const ref = useRef<HTMLDialogElement>(null)
   const [price, setPrice] = useState(() => suggestedPrice(quote))
   const value = Number(price)
   const valid = price.trim() !== '' && Number.isFinite(value) && value > 0
+  const unusual = valid && farFromEstimate(value, quote)
+  const isRange = quote.price?.max !== undefined && quote.price.max !== quote.price.min
 
   useEffect(() => {
     const dialog = ref.current
@@ -125,7 +196,7 @@ function ReviewDialog({
       ref={ref}
       onClose={onClose}
       aria-labelledby="review-title"
-      className="m-auto w-[min(28rem,calc(100%-2rem))] rounded-[10px] border border-line bg-surface p-0 text-sm text-ink backdrop:bg-black/40"
+      className="m-auto max-h-[calc(100dvh-2rem)] w-[min(30rem,calc(100%-2rem))] rounded-[10px] border border-line bg-surface p-0 text-sm text-ink backdrop:bg-black/40"
     >
       <form
         onSubmit={(e) => {
@@ -135,59 +206,99 @@ function ReviewDialog({
       >
         <header className="border-b border-divider px-5 py-4">
           <h2 id="review-title" className="text-base font-semibold">
-            Review quote
+            Review {quote.customer ? `${quote.customer}’s` : 'this'} quote
           </h2>
-          <p className="text-muted">
-            {quote.customer ?? 'Test upload'} · {quote.service}
-          </p>
+          <p className="text-muted">{quote.service}</p>
         </header>
 
         <div className="space-y-4 px-5 py-4">
-          <dl className="grid grid-cols-2 gap-3">
-            <div className="rounded-lg border border-divider p-3">
-              <dt className="text-xs text-muted">AI estimate</dt>
-              <dd className="text-lg font-semibold tabular-nums">{formatPrice(quote.price)}</dd>
-            </div>
-            <div className="rounded-lg border border-divider p-3">
-              <dt className="text-xs text-muted">AI confidence</dt>
-              <dd className="text-lg font-semibold tabular-nums">
-                {quote.confidence !== undefined ? `${Math.round(quote.confidence * 100)}%` : '—'}
-              </dd>
-            </div>
-          </dl>
-          <p className="text-xs text-muted">
-            The AI wasn’t confident enough to send this on its own. Check the estimate, adjust it if needed, then approve.
+          {/* The evidence: what the customer sent, and what the AI made of it */}
+          <div className="flex gap-4">
+            {quote.photoUrl ? (
+              <a href={quote.photoUrl} target="_blank" rel="noreferrer" className="shrink-0 rounded-lg focus-visible:ring-2 focus-visible:ring-brand" title="Open the full photo">
+                {/* eslint-disable-next-line @next/next/no-img-element -- signed URL to a private photo */}
+                <img src={quote.photoUrl} alt="The customer’s photo" className="h-28 w-28 rounded-lg border border-line object-cover" />
+              </a>
+            ) : (
+              <span className="flex h-28 w-28 shrink-0 flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-line bg-brand-soft px-2 text-center text-[11px] text-muted">
+                <ImageOff className="h-5 w-5" aria-hidden />
+                No photo in demo data
+              </span>
+            )}
+            <dl className="min-w-0 space-y-2">
+              <div>
+                <dt className="text-xs text-muted">AI thinks the condition is</dt>
+                <dd className="font-semibold">{quote.level ?? 'Not sure'}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted">AI price</dt>
+                <dd className="text-lg font-semibold tabular-nums">{formatPrice(quote.price)}</dd>
+              </div>
+            </dl>
+          </div>
+          <p className="flex items-start gap-2 rounded-lg bg-highlight px-3 py-2 text-xs text-highlight-ink">
+            <AlertTriangle className="mt-px h-3.5 w-3.5 shrink-0 text-amber-700" aria-hidden />
+            {reasonText(quote)}
           </p>
 
-          <label className="block space-y-1.5">
-            <span className="font-medium">Price to send the customer</span>
+          <div className="space-y-1.5">
+            <label htmlFor="final-price" className="font-medium">
+              Price to send the customer
+            </label>
             <span className="flex items-center rounded-lg border border-line focus-within:ring-2 focus-within:ring-brand">
-              <span className="pl-3 text-muted">RM</span>
+              <span className="pl-3 text-muted" aria-hidden>
+                RM
+              </span>
               <input
+                id="final-price"
                 autoFocus
                 inputMode="numeric"
                 value={price}
                 onChange={(e) => setPrice(e.target.value.replace(/[^\d.]/g, ''))}
                 aria-invalid={!valid}
+                aria-describedby="price-help"
                 className="w-full rounded-lg bg-transparent px-2 py-2 tabular-nums outline-none"
               />
             </span>
-            {!valid && <span className="block text-xs text-rose-700">Enter a price above RM0.</span>}
-          </label>
+            <p id="price-help" className="text-xs" aria-live="polite">
+              {!valid ? (
+                <span className="text-rose-700">Enter a price above RM0.</span>
+              ) : unusual ? (
+                <span className="flex items-start gap-1.5 font-medium text-amber-800">
+                  <AlertTriangle className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />
+                  RM{Math.round(value)} is far from the AI’s price ({formatPrice(quote.price)}). Check it before sending.
+                </span>
+              ) : (
+                <span className="text-muted">
+                  {isRange ? 'Filled in with the middle of the AI’s range.' : 'Filled in with the AI’s price.'} Change it if
+                  needed.
+                </span>
+              )}
+            </p>
+          </div>
         </div>
 
-        <footer className="flex justify-end gap-2 border-t border-divider px-5 py-3">
+        <footer className="flex flex-wrap items-center gap-2 border-t border-divider px-5 py-3">
+          {onAskForPhoto && (
+            <button
+              type="button"
+              onClick={onAskForPhoto}
+              className="mr-auto rounded-lg px-2 py-1.5 font-medium text-ink underline decoration-line/30 underline-offset-4 hover:decoration-ink focus-visible:ring-2 focus-visible:ring-brand"
+            >
+              Ask for a clearer photo
+            </button>
+          )}
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-line px-3 py-1.5 font-medium hover:bg-brand-soft focus-visible:ring-2 focus-visible:ring-brand"
+            className="ml-auto rounded-lg border border-line px-3 py-1.5 font-medium hover:bg-brand-soft focus-visible:ring-2 focus-visible:ring-brand"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={!valid}
-            className="rounded-lg bg-brand px-3 py-1.5 font-medium text-brand-on hover:bg-brand/85 focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:opacity-50"
+            className="rounded-lg bg-brand px-3 py-1.5 font-medium text-brand-on hover:bg-brand/80 focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:opacity-50"
           >
             {valid ? `Approve & send RM${Math.round(value)}` : 'Approve & send'}
           </button>

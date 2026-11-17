@@ -422,9 +422,31 @@ async def get_rubrics(merchant_id: str = Depends(current_merchant_id)) -> list[d
 @router.get("/assessments")
 async def get_assessments(limit: int = Query(20, ge=1, le=200), merchant_id: str = Depends(current_merchant_id)) -> list[dict]:
     sb = _supabase()
-    return (
+    rows = (
         sb.table("quote_assessments")
         .select("*").eq("merchant_id", merchant_id)
         .order("created_at", desc=True).limit(limit)
         .execute().data
     )
+    _attach_photo_urls(sb, rows)
+    return rows
+
+
+PHOTO_URL_TTL_SECONDS = 3600
+
+
+def _attach_photo_urls(sb, rows: list[dict]) -> None:
+    """Adds `image_url`, a short-lived signed link to each private photo, for the Overview.
+    The bucket stays private; a failure here only means no thumbnails."""
+    paths = [r["image_path"] for r in rows if r.get("image_path")]
+    if not paths:
+        return
+    try:
+        signed = sb.storage.from_("quote-images").create_signed_urls(paths, PHOTO_URL_TTL_SECONDS)
+        by_path = {s.get("path"): s.get("signedURL") or s.get("signedUrl") for s in signed if isinstance(s, dict)}
+        for r in rows:
+            url = by_path.get(r.get("image_path"))
+            if url:
+                r["image_url"] = url
+    except Exception as e:  # noqa: BLE001 - thumbnails are optional
+        print(f"[WARN] Couldn't sign photo URLs: {e}")

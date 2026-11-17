@@ -52,49 +52,41 @@ function SidebarContents({ active, compact = false, onNavigate }: { active: stri
 
       <nav aria-label="Main" className={`flex-1 ${compact ? 'px-2' : 'px-3'}`}>
         <ul className="space-y-1">
-          {NAV.map(({ label, Icon, href, unavailableReason }) => {
+          {NAV.filter((n) => n.href).map(({ label, Icon, href }) => {
             const isActive = href === active
-            const base = `flex w-full items-center rounded-lg py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-brand ${
-              compact ? 'justify-center px-0' : 'gap-3 px-3'
-            }`
             return (
               <li key={label}>
-                {href ? (
-                  <Link
-                    href={href}
-                    onClick={onNavigate}
-                    aria-current={isActive ? 'page' : undefined}
-                    title={compact ? label : undefined}
-                    className={`${base} ${isActive ? 'bg-brand font-medium text-brand-on' : 'text-sidebar-ink hover:bg-sidebar-hover'}`}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" aria-hidden />
-                    {compact ? <span className="sr-only">{label}</span> : label}
-                  </Link>
-                ) : (
-                  // Not built yet: visible but clearly unavailable, with the reason on hover and for screen readers.
-                  <span
-                    aria-disabled="true"
-                    title={compact ? `${label}: ${unavailableReason}` : unavailableReason}
-                    className={`${base} cursor-not-allowed text-sidebar-muted`}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" aria-hidden />
-                    {compact ? (
-                      <span className="sr-only">{label} (coming soon)</span>
-                    ) : (
-                      <>
-                        <span className="flex-1">{label}</span>
-                        <span className="rounded border border-sidebar-muted/40 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-sidebar-muted">
-                          Soon
-                        </span>
-                      </>
-                    )}
-                    <span className="sr-only">: {unavailableReason}</span>
-                  </span>
-                )}
+                <Link
+                  href={href!}
+                  onClick={onNavigate}
+                  aria-current={isActive ? 'page' : undefined}
+                  title={compact ? label : undefined}
+                  className={`flex w-full items-center rounded-lg py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-brand ${
+                    compact ? 'justify-center px-0' : 'gap-3 px-3'
+                  } ${isActive ? 'bg-brand font-medium text-brand-on' : 'text-sidebar-ink hover:bg-sidebar-hover'}`}
+                >
+                  <Icon className="h-4 w-4 shrink-0" aria-hidden />
+                  {compact ? <span className="sr-only">{label}</span> : label}
+                </Link>
               </li>
             )
           })}
         </ul>
+
+        {/* Not built yet: one quiet line instead of a row of disabled items to tap on. */}
+        {!compact && (
+          <div className="mt-6 space-y-1 px-3 text-xs text-sidebar-muted">
+            <p className="font-medium">Coming soon</p>
+            <ul>
+              {NAV.filter((n) => !n.href).map(({ label, unavailableReason }) => (
+                <li key={label}>
+                  {label}
+                  <span className="sr-only">: {unavailableReason}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </nav>
 
       {compact ? (

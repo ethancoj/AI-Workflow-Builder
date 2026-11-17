@@ -16,6 +16,7 @@ type AssessmentRow = {
   confidence: number
   escalated: boolean
   created_at: string
+  image_url?: string
 }
 
 async function getJson<T>(path: string): Promise<T> {
@@ -25,7 +26,7 @@ async function getJson<T>(path: string): Promise<T> {
 }
 
 const errorMessage = (r: PromiseRejectedResult) =>
-  r.reason instanceof TypeError ? 'Can’t reach the API server.' : String(r.reason?.message ?? r.reason)
+  r.reason instanceof TypeError ? 'Couldn’t reach the server. Check your connection.' : String(r.reason?.message ?? r.reason)
 
 function toQuoteRow(a: AssessmentRow, rubrics: Map<string, RubricRow>): QuoteRow {
   const rubric = a.rubric_id ? rubrics.get(a.rubric_id) : undefined
@@ -38,6 +39,8 @@ function toQuoteRow(a: AssessmentRow, rubrics: Map<string, RubricRow>): QuoteRow
     price: { min: a.price_estimate },
     receivedAt: a.created_at,
     confidence: a.confidence,
+    level: a.level_name,
+    photoUrl: a.image_url,
   }
 }
 
@@ -60,7 +63,7 @@ export async function loadLiveOverview(): Promise<OverviewData> {
     : { status: 'error', message: errorMessage(assessmentsR as PromiseRejectedResult) }
 
   const reviewsSection: Section<QuoteRow[]> = rows
-    ? { status: 'ready', data: rows.filter((r) => r.status === 'needs_review').slice(0, 4) }
+    ? { status: 'ready', data: rows.filter((r) => r.status === 'needs_review') }
     : quotesSection
 
   // Recent activity is stitched together from whatever loaded.
@@ -79,8 +82,8 @@ export async function loadLiveOverview(): Promise<OverviewData> {
       kind: q.status === 'needs_review' ? 'review' : 'quote',
       text:
         q.status === 'needs_review'
-          ? `Photo flagged for review: ${q.service} (${Math.round((q.confidence ?? 0) * 100)}% confidence)`
-          : `AI quote drafted: ${q.service}, ${formatPrice(q.price)}`,
+          ? `Test photo needs your review: ${q.service}`
+          : `AI quote from a test photo: ${q.service}, ${formatPrice(q.price)}`,
       at: q.receivedAt,
     }),
   )
@@ -95,10 +98,10 @@ export async function loadLiveOverview(): Promise<OverviewData> {
         workflows: workflows
           ? { value: workflows.length, caption: 'saved · not deployed yet' }
           : unavailable('Couldn’t load workflows'),
-        quoteRequests: rows ? { value: rows.length, caption: 'photos assessed' } : unavailable('API unavailable'),
+        quoteRequests: rows ? { value: rows.length, caption: 'photos assessed' } : unavailable('Couldn’t load quotes'),
         awaitingReview: rows
-          ? { value: rows.filter((r) => r.status === 'needs_review').length, caption: 'low-confidence quotes' }
-          : unavailable('API unavailable'),
+          ? { value: rows.filter((r) => r.status === 'needs_review').length, caption: 'the AI wasn’t sure about these' }
+          : unavailable('Couldn’t load quotes'),
         quotesSent: unavailable('Available once WhatsApp is connected'),
       },
     },
