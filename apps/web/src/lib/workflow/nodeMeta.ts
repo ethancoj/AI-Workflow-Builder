@@ -1,19 +1,21 @@
 import type { XYPosition } from '@xyflow/react'
+import { Camera, Flag, MessageSquareText, Play, Split, type LucideIcon } from 'lucide-react'
 import type { WorkflowNode, WorkflowNodeType } from './types'
 
-type NodeMeta = { label: string; icon: string; color: string; description: string }
+type NodeMeta = { label: string; Icon: LucideIcon; description: string }
 
 // Merchant-facing names. The saved type keys (llm, condition, quote…) are the runtime
 // contract and never change; only these labels do. Report names: LLM Response = AI Reply,
 // Condition = Check Message, Quote = Photo Quote.
 
-// Single source of truth for node display info (sidebar, canvas cards, minimap).
+// Single source of truth for step display info (palette, canvas cards, settings, test chat).
+// Steps are told apart by icon and name, not colour: colour is kept for status.
 export const NODE_META: Record<WorkflowNodeType, NodeMeta> = {
-  start: { label: 'Start', icon: '▶', color: '#16a34a', description: 'Runs when a customer messages you' },
-  llm: { label: 'AI Reply', icon: '🤖', color: '#2563eb', description: 'Writes a reply to the customer in your voice' },
-  condition: { label: 'Check Message', icon: '🔀', color: '#d97706', description: 'Sends the chat down a different path depending on what the customer asks' },
-  quote: { label: 'Photo Quote', icon: '📷', color: '#7c3aed', description: 'Prices the customer’s photo using your pricing rubric' },
-  end: { label: 'End', icon: '⏹', color: '#dc2626', description: 'Sends a closing message and ends the chat' },
+  start: { label: 'Start', Icon: Play, description: 'Runs when a customer messages you' },
+  llm: { label: 'AI Reply', Icon: MessageSquareText, description: 'Writes a reply to the customer in your voice' },
+  condition: { label: 'Check Message', Icon: Split, description: 'Sends the chat down a different path depending on what the customer asks' },
+  quote: { label: 'Photo Quote', Icon: Camera, description: 'Prices the customer’s photo using your pricing rubric' },
+  end: { label: 'End', Icon: Flag, description: 'Sends a closing message and ends the chat' },
 }
 
 // What a customer can want, for “Customer wants to…” paths. Keys are the labels the
