@@ -8,10 +8,10 @@ const minutesAgo = (m: number) => new Date(Date.now() - m * 60_000).toISOString(
 export function demoOverview(): OverviewData {
   const quotes: QuoteRow[] = [
     { id: 'd3', customer: 'Priya Ramasamy', service: 'Aircon not cold', status: 'pending_ai', price: null, receivedAt: minutesAgo(1) },
-    { id: 'd1', customer: 'Ahmad Faizal', service: 'Aircon chemical wash', status: 'needs_review', price: { min: 120, max: 180 }, receivedAt: minutesAgo(6), confidence: 0.52, level: 'Moderately Dirty', reasoning: 'Thick dust on the filter, but the photo is taken from an angle and the fins are only partly visible, so it could also be Heavily Soiled.' },
+    { id: 'd1', customer: 'Ahmad Faizal', service: 'Aircon chemical wash', status: 'needs_review', price: { min: 120, max: 180 }, receivedAt: minutesAgo(6), confidence: 0.52, threshold: 0.75, level: 'Moderately Dirty', photoUrl: '/demo/aircon-moderate.jpg', reasoning: 'Thick dust on the filter, but the photo is taken from an angle and the fins are only partly visible, so it could also be Heavily Soiled.' },
     { id: 'd2', customer: 'Tan Mei Ling', service: 'Aircon general service', status: 'draft', price: { min: 80 }, receivedAt: minutesAgo(22), confidence: 0.88, level: 'Clean / Light Dust' },
     { id: 'd4', customer: 'Lim Wei Jie', service: 'Aircon general service', status: 'sent', price: { min: 150 }, receivedAt: minutesAgo(95), confidence: 0.91, level: 'Moderately Dirty' },
-    { id: 'd5', customer: 'Nurul Aisyah', service: 'Aircon chemical wash', status: 'needs_review', price: { min: 180 }, receivedAt: minutesAgo(180), confidence: 0.47, level: 'Heavily Soiled / Mouldy', reasoning: 'Dark patches that may be mould, but the photo is dim and blurry, so they could also be shadows.' },
+    { id: 'd5', customer: 'Nurul Aisyah', service: 'Aircon chemical wash', status: 'needs_review', price: { min: 180 }, receivedAt: minutesAgo(180), confidence: 0.47, threshold: 0.75, level: 'Heavily Soiled / Mouldy', photoUrl: '/demo/aircon-heavy.jpg', reasoning: 'Dark patches that may be mould, but the photo is dim and blurry, so they could also be shadows.' },
     { id: 'd6', customer: 'Kumar Selvam', service: 'Gas top-up', status: 'sent', price: { min: 100, max: 140 }, receivedAt: minutesAgo(320), confidence: 0.83 },
   ]
 
@@ -20,10 +20,11 @@ export function demoOverview(): OverviewData {
     summary: {
       status: 'ready',
       data: {
-        workflows: { value: 3, caption: 'saved · not live yet' },
-        quoteRequests: { value: 24, caption: 'photos received' },
-        awaitingReview: { value: 2, caption: 'the AI wasn’t sure about these' },
-        quotesSent: { value: 15, caption: 'sent to customers' },
+        // Consistent funnel: 24 photos → 15 quotes sent → 9 booked (matches the stage bars).
+        quoteRequests: { value: 24, caption: '' },
+        quotesSent: { value: 15, caption: '' },
+        booked: { value: 9, caption: '' },
+        workflows: { value: 3, caption: '' },
       },
     },
     quotes: { status: 'ready', data: quotes },
@@ -35,8 +36,8 @@ export function demoOverview(): OverviewData {
         stages: [
           { name: 'Greeting', count: 48 },
           { name: 'Photo requested', count: 31 },
-          { name: 'AI quote ready', count: 24 },
-          { name: 'Booked', count: 15 },
+          { name: 'Quote sent', count: 15 },
+          { name: 'Booked', count: 9 },
         ],
       },
     },
@@ -44,9 +45,8 @@ export function demoOverview(): OverviewData {
       status: 'ready',
       data: [
         { id: 'e3', kind: 'message', text: 'Priya Ramasamy sent a photo', at: minutesAgo(1) },
-        { id: 'e1', kind: 'review', text: 'Ahmad Faizal’s quote needs your review', at: minutesAgo(6) },
-        { id: 'e2', kind: 'quote', text: 'AI quote drafted for Tan Mei Ling: RM80', at: minutesAgo(22) },
-                { id: 'e4', kind: 'quote', text: 'Quote sent to Lim Wei Jie: RM150', at: minutesAgo(90) },
+        { id: 'e6', kind: 'booking', text: 'Kumar Selvam booked a visit for Saturday, 10am', at: minutesAgo(30) },
+        { id: 'e4', kind: 'quote', text: 'Quote sent to Lim Wei Jie: RM150', at: minutesAgo(90) },
         { id: 'e5', kind: 'workflow', text: 'Workflow “Aircon quote bot” updated', at: minutesAgo(240) },
       ],
     },
@@ -66,7 +66,7 @@ function resolveDemoQuote(
   const quote = data.reviews.data.find((q) => q.id === id)
   if (!quote) return data
   const { row, event, sent } = change(quote)
-  const { awaitingReview, quotesSent } = data.summary.data
+  const { quotesSent } = data.summary.data
   const bump = (m: { value: number | null; caption: string }, by: number) => ({ ...m, value: (m.value ?? 0) + by })
 
   return {
@@ -75,11 +75,23 @@ function resolveDemoQuote(
       status: 'ready',
       data: {
         ...data.summary.data,
-        awaitingReview: bump(awaitingReview, -1),
         quotesSent: sent ? bump(quotesSent, 1) : quotesSent,
       },
     },
     quotes: { status: 'ready', data: data.quotes.data.map((q) => (q.id === id ? row : q)) },
+    // Keep the funnel in step with the stat row: a sent quote also moves the "Quote sent" stage.
+    workflowActivity:
+      sent && data.workflowActivity.status === 'ready' && data.workflowActivity.data.kind === 'stages'
+        ? {
+            status: 'ready',
+            data: {
+              kind: 'stages',
+              stages: data.workflowActivity.data.stages.map((s) =>
+                s.name === 'Quote sent' ? { ...s, count: s.count + 1 } : s,
+              ),
+            },
+          }
+        : data.workflowActivity,
     reviews: { status: 'ready', data: data.reviews.data.filter((q) => q.id !== id) },
     events:
       data.events.status === 'ready'
@@ -94,7 +106,7 @@ function resolveDemoQuote(
 /** Demo: ask the customer for a clearer photo instead of sending a price. */
 export function askForPhotoDemo(data: OverviewData, id: string): OverviewData {
   return resolveDemoQuote(data, id, (q) => ({
-    row: { ...q, status: 'pending_ai', price: null, confidence: undefined },
+    row: { ...q, status: 'waiting_customer', price: null, confidence: undefined },
     event: `Asked ${q.customer} for a clearer photo`,
     sent: false,
   }))

@@ -9,7 +9,15 @@ export type Section<T> =
   | { status: 'error'; message: string }
   | { status: 'ready'; data: T }
 
-export type QuoteStatus = 'pending_ai' | 'draft' | 'sent' | 'needs_review'
+export type QuoteStatus =
+  | 'pending_ai'
+  | 'waiting_customer'
+  | 'draft'
+  | 'sent'
+  | 'needs_review'
+  // My data before WhatsApp: photos tested on the Pricing Rubric page, never sent to anyone
+  | 'test_sure'
+  | 'test_unsure'
 
 export type Price = { min: number; max?: number }
 
@@ -28,16 +36,21 @@ export type QuoteRow = {
   photoUrl?: string
   /** The AI's own explanation of what it saw in the photo. */
   reasoning?: string
+  /** The merchant's confidence level from the rubric (0–1), to show next to the AI's certainty. */
+  threshold?: number
 }
 
-/** value null = this metric isn't available yet; caption explains why. */
-export type Metric = { value: number | null; caption: string }
+/**
+ * value null = this metric isn't available yet; caption explains why.
+ * label overrides the default stat name when the figure means something narrower (e.g. test photos).
+ */
+export type Metric = { value: number | null; caption: string; label?: string }
 
 export type Summary = {
   workflows: Metric
   quoteRequests: Metric
-  awaitingReview: Metric
   quotesSent: Metric
+  booked: Metric
 }
 
 export type WorkflowActivity =
@@ -46,7 +59,7 @@ export type WorkflowActivity =
 
 export type ActivityEvent = {
   id: string
-  kind: 'quote' | 'review' | 'workflow' | 'rubric' | 'message'
+  kind: 'quote' | 'review' | 'workflow' | 'rubric' | 'message' | 'booking'
   text: string
   at: string // ISO timestamp
 }

@@ -82,7 +82,7 @@ export default function WorkflowBar() {
       useBuilderStore.getState().loadWorkflow(wf.id, wf.name, wf.flow)
       setUrlWorkflowId(wf.id)
       // Wait a frame so React Flow has rendered the new nodes before fitting.
-      requestAnimationFrame(() => fitView({ padding: 0.2 }))
+      requestAnimationFrame(() => fitView({ padding: 0.2, maxZoom: 1 }))
     },
     [fitView],
   )
@@ -116,7 +116,7 @@ export default function WorkflowBar() {
       const { name, flow } = photoQuoteTemplate(rubric, params.get('service') ?? undefined)
       useBuilderStore.getState().loadTemplate(name, flow)
       setUrlWorkflowId(null)
-      requestAnimationFrame(() => fitView({ padding: 0.15 }))
+      requestAnimationFrame(() => fitView({ padding: 0.15, maxZoom: 1 }))
     }
     if (idFromUrl) {
       getWorkflow(idFromUrl)
@@ -168,7 +168,7 @@ export default function WorkflowBar() {
     if (!confirmDiscard()) return
     useBuilderStore.getState().newWorkflow()
     setUrlWorkflowId(null)
-    requestAnimationFrame(() => fitView({ padding: 0.2 }))
+    requestAnimationFrame(() => fitView({ padding: 0.2, maxZoom: 1 }))
     setStatus(null)
   }
 
@@ -180,7 +180,7 @@ export default function WorkflowBar() {
     useBuilderStore.getState().loadTemplate(name, flow)
     setUrlWorkflowId(null)
     setBusy(false)
-    requestAnimationFrame(() => fitView({ padding: 0.15 }))
+    requestAnimationFrame(() => fitView({ padding: 0.15, maxZoom: 1 }))
     showStatus({
       kind: 'ok',
       text: rubric ? `Template ready, using “${rubric.name}”. Try it in Test chat, then Save.` : 'Template ready. Pick a pricing rubric in the Photo Quote step.',

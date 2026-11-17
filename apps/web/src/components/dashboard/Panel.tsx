@@ -32,7 +32,7 @@ export function Panel({
       className={`scroll-mt-4 rounded-[10px] border border-line bg-surface outline-none focus-visible:ring-2 focus-visible:ring-brand ${className}`}
     >
       <header className="flex items-center justify-between gap-3 border-b border-divider px-4 py-3">
-        <h2 id={headingId} className="flex items-center gap-2 text-sm font-semibold text-ink">
+        <h2 id={headingId} className="flex items-center gap-2 text-base font-semibold tracking-tight text-ink">
           {title}
           {count !== undefined && (
             <span className="rounded-full bg-brand px-2 py-0.5 text-xs font-semibold tabular-nums text-brand-on">
@@ -80,7 +80,7 @@ export function SectionBody<T>({
         {retry && (
           <button
             onClick={retry}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1 text-xs font-medium text-ink hover:bg-brand-soft focus-visible:ring-2 focus-visible:ring-brand"
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-line px-3 text-xs font-medium text-ink hover:bg-brand-soft focus-visible:ring-2 focus-visible:ring-brand"
           >
             <RotateCcw className="h-3.5 w-3.5" aria-hidden />
             Try again

@@ -88,6 +88,15 @@ export function ChecksButton() {
           .filter(Boolean)
           .join(' · ')
 
+  if (issues.length === 0) {
+    return (
+      <span role="status" className="inline-flex items-center gap-1.5 px-1 text-sm text-muted">
+        <CheckCircle2 className="h-4 w-4 text-emerald-700" aria-hidden />
+        No problems found
+      </span>
+    )
+  }
+
   return (
     <div ref={root} className="relative">
       <button

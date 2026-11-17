@@ -37,13 +37,15 @@ export function photoQuoteTemplate(rubric: TemplateRubric, service = 'aircon'): 
     endAnswered: newId('end'),
     endReview: newId('end'),
   }
-  const X = 320
+  // Columns are 240px cards; Start is a narrower 144px chip, so it's shifted to line up.
+  const COL = 300
+  const ROW = 170
   const nodes: WorkflowNode[] = [
-    { id: id.start, type: 'start', position: { x: 0, y: 140 }, data: { trigger: 'any_message', keywords: [] } },
+    { id: id.start, type: 'start', position: { x: 48, y: 0 }, data: { trigger: 'any_message', keywords: [] } },
     {
       id: id.greet,
       type: 'llm',
-      position: { x: X, y: 140 },
+      position: { x: 0, y: ROW * 0.8 },
       data: {
         persona: PERSONA,
         instructions: `Greet the customer and thank them for messaging. Ask them to send a clear photo of the ${service} they need help with, so we can estimate the price. Keep it short.`,
@@ -52,19 +54,19 @@ export function photoQuoteTemplate(rubric: TemplateRubric, service = 'aircon'): 
     {
       id: id.quote,
       type: 'quote',
-      position: { x: X * 2, y: 140 },
+      position: { x: 0, y: ROW * 2 },
       data: { rubricId: rubric?.id ?? null, rubricName: rubric?.name ?? null },
     },
     {
       id: id.check,
       type: 'condition',
-      position: { x: X * 3, y: 40 },
+      position: { x: -COL / 2, y: ROW * 3.2 },
       data: { branches: [{ id: id.booking, match: 'intent', value: 'booking' }] },
     },
     {
       id: id.askDetails,
       type: 'llm',
-      position: { x: X * 4, y: -40 },
+      position: { x: -COL, y: ROW * 4.3 },
       data: {
         persona: PERSONA,
         instructions:
@@ -74,26 +76,26 @@ export function photoQuoteTemplate(rubric: TemplateRubric, service = 'aircon'): 
     {
       id: id.confirm,
       type: 'llm',
-      position: { x: X * 5, y: -40 },
+      position: { x: -COL, y: ROW * 5.5 },
       data: {
         persona: PERSONA,
         instructions:
           'Thank the customer and repeat back the booking details they gave. Say our team will confirm the appointment on WhatsApp shortly.',
       },
     },
-    { id: id.endBooked, type: 'end', position: { x: X * 6, y: -40 }, data: { message: '' } },
+    { id: id.endBooked, type: 'end', position: { x: -COL, y: ROW * 6.6 }, data: { message: '' } },
     {
       id: id.answer,
       type: 'llm',
-      position: { x: X * 4, y: 120 },
+      position: { x: 0, y: ROW * 4.3 },
       data: {
         persona: PERSONA,
         instructions:
           'Answer the customer’s question about the quote or the service. If you don’t know something, say our team will get back to them. End by asking if they’d like to book a visit.',
       },
     },
-    { id: id.endAnswered, type: 'end', position: { x: X * 5, y: 120 }, data: { message: '' } },
-    { id: id.endReview, type: 'end', position: { x: X * 3, y: 280 }, data: { message: '' } },
+    { id: id.endAnswered, type: 'end', position: { x: 0, y: ROW * 5.5 }, data: { message: '' } },
+    { id: id.endReview, type: 'end', position: { x: COL, y: ROW * 3.2 }, data: { message: '' } },
   ]
 
   const edge = (source: string, target: string, sourceHandle: string | null = null): Edge => ({

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { formatPrice, fullDate, timeAgo } from '@/lib/dashboard/format'
 import type { DataSource, QuoteRow, Section } from '@/lib/dashboard/types'
 import { Panel, SectionBody } from './Panel'
+import { REVIEW_QUEUE_ID } from './QuoteReviewPanel'
 import StatusBadge from './StatusBadge'
 
 export default function RecentQuotesTable({ quotes, source }: { quotes: Section<QuoteRow[]>; source: DataSource }) {
@@ -32,7 +33,13 @@ export default function RecentQuotesTable({ quotes, source }: { quotes: Section<
                 </div>
                 <p className="truncate text-sm text-muted">{q.service}</p>
                 <div className="flex items-center justify-between gap-3">
-                  <StatusBadge status={q.status} />
+                  {q.status === 'needs_review' ? (
+                        <a href={`#${REVIEW_QUEUE_ID}`} className="rounded-full focus-visible:ring-2 focus-visible:ring-brand" title="Go to the review queue">
+                          <StatusBadge status={q.status} />
+                        </a>
+                      ) : (
+                        <StatusBadge status={q.status} />
+                      )}
                   <time dateTime={q.receivedAt} title={fullDate(q.receivedAt)} className="text-xs text-muted">
                     {timeAgo(q.receivedAt)}
                   </time>
@@ -48,7 +55,7 @@ export default function RecentQuotesTable({ quotes, source }: { quotes: Section<
                   <th scope="col" className="px-4 pb-2 font-medium">Customer</th>
                   <th scope="col" className="px-4 pb-2 font-medium">Service</th>
                   <th scope="col" className="px-4 pb-2 font-medium">Status</th>
-                  <th scope="col" className="px-4 pb-2 text-right font-medium">AI price</th>
+                  <th scope="col" className="px-4 pb-2 text-right font-medium">Price</th>
                   <th scope="col" className="px-4 pb-2 text-right font-medium">Received</th>
                 </tr>
               </thead>
@@ -64,7 +71,13 @@ export default function RecentQuotesTable({ quotes, source }: { quotes: Section<
                     </td>
                     <td className="px-4 py-3 text-ink">{q.service}</td>
                     <td className="px-4 py-3">
-                      <StatusBadge status={q.status} />
+                      {q.status === 'needs_review' ? (
+                        <a href={`#${REVIEW_QUEUE_ID}`} className="rounded-full focus-visible:ring-2 focus-visible:ring-brand" title="Go to the review queue">
+                          <StatusBadge status={q.status} />
+                        </a>
+                      ) : (
+                        <StatusBadge status={q.status} />
+                      )}
                     </td>
                     <td className="px-4 py-3 text-right font-medium tabular-nums text-ink">{formatPrice(q.price)}</td>
                     <td className="px-4 py-3 text-right text-muted">

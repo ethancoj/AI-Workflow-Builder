@@ -11,11 +11,11 @@ type NodeMeta = { label: string; Icon: LucideIcon; description: string }
 // Single source of truth for step display info (palette, canvas cards, settings, test chat).
 // Steps are told apart by icon and name, not colour: colour is kept for status.
 export const NODE_META: Record<WorkflowNodeType, NodeMeta> = {
-  start: { label: 'Start', Icon: Play, description: 'Runs when a customer messages you' },
-  llm: { label: 'AI Reply', Icon: MessageSquareText, description: 'Writes a reply to the customer in your voice' },
-  condition: { label: 'Check Message', Icon: Split, description: 'Sends the chat down a different path depending on what the customer asks' },
-  quote: { label: 'Photo Quote', Icon: Camera, description: 'Prices the customer’s photo using your pricing rubric' },
-  end: { label: 'End', Icon: Flag, description: 'Sends a closing message and ends the chat' },
+  start: { label: 'Start', Icon: Play, description: 'When a customer messages you' },
+  llm: { label: 'AI Reply', Icon: MessageSquareText, description: 'Replies in your voice' },
+  condition: { label: 'Check Message', Icon: Split, description: 'Picks a path by what they ask' },
+  quote: { label: 'Photo Quote', Icon: Camera, description: 'Prices a photo with your rubric' },
+  end: { label: 'End', Icon: Flag, description: 'Closes the chat' },
 }
 
 // What a customer can want, for “Customer wants to…” paths. Keys are the labels the

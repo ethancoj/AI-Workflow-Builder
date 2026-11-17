@@ -126,6 +126,86 @@ const priceText = (min: number, max?: number | null) =>
 
 const splitCues = (raw: string) => raw.split(/[\n,]/).map((c) => c.trim()).filter(Boolean);
 
+/** Common services; "Other…" lets a merchant type their own (the AI prompt uses this word). */
+const SERVICES = ["aircon", "car repair", "home cleaning", "upholstery cleaning", "plumbing"];
+const OTHER = "__other";
+
+function ServiceField({ id, value, onChange }: { id: string; value: string; onChange: (v: string) => void }) {
+  const [typing, setTyping] = useState(() => !SERVICES.includes(value));
+  return (
+    <div className="space-y-2">
+      <select
+        id={id}
+        value={typing ? OTHER : value}
+        onChange={(e) => {
+          if (e.target.value === OTHER) {
+            setTyping(true);
+            onChange("");
+          } else {
+            setTyping(false);
+            onChange(e.target.value);
+          }
+        }}
+        className={inputClass}
+      >
+        {SERVICES.map((s) => (
+          <option key={s} value={s}>
+            {s[0].toUpperCase() + s.slice(1)}
+          </option>
+        ))}
+        <option value={OTHER}>Other…</option>
+      </select>
+      {typing && (
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Your service, e.g. roof repair"
+          aria-label="Your service"
+          autoFocus
+          className={inputClass}
+        />
+      )}
+    </div>
+  );
+}
+
+/** Fixed price | Range, as a two-button switch. */
+function PriceModeToggle({ range, label, onChange }: { range: boolean; label: string; onChange: (range: boolean) => void }) {
+  return (
+    <span role="group" aria-label={label} className="inline-flex rounded-lg border border-line bg-brand-soft p-0.5 text-xs font-medium">
+      {[false, true].map((r) => (
+        <button
+          key={String(r)}
+          type="button"
+          aria-pressed={range === r}
+          onClick={() => onChange(r)}
+          className={`rounded-md px-2.5 py-1 focus-visible:ring-2 focus-visible:ring-brand ${
+            range === r ? "bg-surface text-ink shadow-sm" : "text-muted hover:text-ink"
+          }`}
+        >
+          {r ? "Range" : "Fixed"}
+        </button>
+      ))}
+    </span>
+  );
+}
+
+/** Level n of N as rising filled bars, so the scale from mild to severe reads at a glance. */
+function IntensityMark({ level, of }: { level: number; of: number }) {
+  return (
+    <span className="flex h-6 shrink-0 items-end gap-0.5" role="img" aria-label={`Level ${level} of ${of}`}>
+      {Array.from({ length: of }, (_, k) => (
+        <span
+          key={k}
+          className={`w-1.5 rounded-sm ${k < level ? "bg-ink" : "bg-line"}`}
+          style={{ height: `${10 + (k * 14) / Math.max(of - 1, 1)}px` }}
+        />
+      ))}
+    </span>
+  );
+}
+
 /** Keeps the raw text while typing (so commas and new lines aren't swallowed) and reports the list. */
 function CuesInput({
   id,
@@ -323,13 +403,10 @@ export default function QuoteDemo() {
                   <label htmlFor="rubric-service" className={labelClass}>
                     Service
                   </label>
-                  <input
+                  <ServiceField
                     id="rubric-service"
-                    type="text"
                     value={rubric.service_type}
-                    onChange={(e) => setRubric({ ...rubric, service_type: e.target.value })}
-                    placeholder="e.g. aircon"
-                    className={inputClass}
+                    onChange={(service_type) => setRubric({ ...rubric, service_type })}
                   />
                 </div>
               </div>
@@ -360,12 +437,7 @@ export default function QuoteDemo() {
             {rubric.levels.map((lvl, i) => (
               <section key={i} className={`${card} space-y-4 p-5`} aria-label={`Level ${lvl.level}`}>
                 <div className="flex flex-wrap items-center gap-3">
-                  <span
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand text-xs font-bold text-brand-on"
-                    aria-hidden
-                  >
-                    {lvl.level}
-                  </span>
+                  <IntensityMark level={i + 1} of={rubric.levels.length} />
                   <input
                     type="text"
                     value={lvl.name}
@@ -374,31 +446,42 @@ export default function QuoteDemo() {
                     aria-label={`Level ${lvl.level} name`}
                     className={`${inputClass} min-w-40 flex-1 font-medium`}
                   />
-                  <div className="flex shrink-0 items-center gap-1.5" role="group" aria-label={`Level ${lvl.level} price`}>
-                    <span className="text-sm font-medium text-muted" aria-hidden>
-                      RM
-                    </span>
-                    <input
-                      type="number"
-                      min={0}
-                      value={lvl.price}
-                      onChange={(e) => updateLevel(i, "price", parseFloat(e.target.value))}
-                      aria-label={`Level ${lvl.level} price in RM (or lowest price)`}
-                      className={`${inputClass} w-20 text-right tabular-nums`}
-                    />
-                    <span className="text-sm text-muted">to</span>
-                    <input
-                      type="number"
-                      min={0}
-                      value={lvl.price_max ?? ""}
-                      placeholder="—"
-                      onChange={(e) =>
-                        updateLevel(i, "price_max", e.target.value === "" ? null : parseFloat(e.target.value))
+                  <div className="flex shrink-0 flex-wrap items-center gap-2" role="group" aria-label={`Level ${lvl.level} price`}>
+                    <PriceModeToggle
+                      range={lvl.price_max != null}
+                      label={`Level ${lvl.level} price type`}
+                      onChange={(range) =>
+                        updateLevel(i, "price_max", range ? Math.round((lvl.price || 0) * 1.25) || null : null)
                       }
-                      aria-label={`Level ${lvl.level} highest price in RM (optional)`}
-                      title="Optional. Leave empty for one fixed price."
-                      className={`${inputClass} w-20 text-right tabular-nums`}
                     />
+                    <span className="flex items-center gap-1.5">
+                      <span className="text-sm font-medium text-muted" aria-hidden>
+                        RM
+                      </span>
+                      <input
+                        type="number"
+                        min={0}
+                        value={lvl.price}
+                        onChange={(e) => updateLevel(i, "price", parseFloat(e.target.value))}
+                        aria-label={lvl.price_max != null ? `Level ${lvl.level} lowest price in RM` : `Level ${lvl.level} price in RM`}
+                        className={`${inputClass} w-20 text-right tabular-nums`}
+                      />
+                      {lvl.price_max != null && (
+                        <>
+                          <span className="text-sm text-muted">to</span>
+                          <input
+                            type="number"
+                            min={0}
+                            value={lvl.price_max}
+                            onChange={(e) =>
+                              updateLevel(i, "price_max", e.target.value === "" ? null : parseFloat(e.target.value))
+                            }
+                            aria-label={`Level ${lvl.level} highest price in RM`}
+                            className={`${inputClass} w-20 text-right tabular-nums`}
+                          />
+                        </>
+                      )}
+                    </span>
                   </div>
                   {rubric.levels.length > 1 && (
                     <button
@@ -437,15 +520,6 @@ export default function QuoteDemo() {
                   <p id={`level-${i}-cues-hint`} className="text-xs text-muted">
                     One sign per line (or separate with commas). The AI looks for these in the customer’s photo.
                   </p>
-                  {lvl.visual_cues.length > 0 && (
-                    <ul className="flex flex-wrap gap-1.5 pt-1" aria-label="Signs the AI looks for">
-                      {lvl.visual_cues.map((cue, ci) => (
-                        <li key={ci} className="rounded-full border border-divider bg-brand-soft px-2 py-0.5 text-xs text-ink">
-                          {cue}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
                 </div>
               </section>
             ))}

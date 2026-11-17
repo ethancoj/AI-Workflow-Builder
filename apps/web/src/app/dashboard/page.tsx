@@ -1,7 +1,7 @@
 'use client'
 
 import { Info } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import RequireAuth from '@/components/auth/RequireAuth'
 import { RecentActivityPanel, WorkflowActivityPanel } from '@/components/dashboard/ActivityPanels'
 import OverviewHeader from '@/components/dashboard/OverviewHeader'
@@ -24,7 +24,6 @@ const LOADING: OverviewData = {
 }
 
 const SOURCE_KEY = 'overview-source'
-const RECEIPT_MS = 8000
 
 function Overview() {
   const [source, setSource] = useState<DataSource>('live')
@@ -32,7 +31,6 @@ function Overview() {
   // Demo data lives in state so demo review actions can change it (on screen only).
   const [demo, setDemo] = useState<OverviewData>(demoOverview)
   const [receipt, setReceipt] = useState<ReviewReceipt | null>(null)
-  const receiptTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   // Remember the live/demo choice per browser (a convenience only; defaults to live).
   useEffect(() => {
@@ -62,22 +60,17 @@ function Overview() {
     fetchLive()
   }, [fetchLive])
 
-  useEffect(() => () => clearTimeout(receiptTimer.current), [])
-
-  /** Demo review actions: apply the change, then offer Undo for a few seconds. */
+  /** Demo review actions: apply the change and offer Undo until the next action. */
   const applyDemo = (change: (d: OverviewData) => OverviewData, text: string) => {
     const before = demo
     setDemo(change(demo))
-    clearTimeout(receiptTimer.current)
     setReceipt({
       text,
       onUndo: () => {
         setDemo(before)
         setReceipt(null)
-        clearTimeout(receiptTimer.current)
       },
     })
-    receiptTimer.current = setTimeout(() => setReceipt(null), RECEIPT_MS)
   }
 
   const customerName = (id: string) =>
@@ -100,35 +93,29 @@ function Overview() {
           </p>
         )}
 
-        {/*
-          Phone: the review queue comes first (Attention-First Rule), then the numbers.
-          Desktop: numbers across the top; queue and recent quotes on the left; activity on the right.
-        */}
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,7fr)_minmax(0,3fr)] lg:grid-rows-[auto_auto_1fr]">
-          <div className="min-w-0 lg:col-start-1 lg:row-start-2 lg:self-start">
-            <QuoteReviewPanel
-              reviews={data.reviews}
-              receipt={source === 'demo' ? receipt : null}
-              onApprove={
-                source === 'demo'
-                  ? (id, price) =>
-                      applyDemo((d) => approveDemoQuote(d, id, price), `Sent RM${price} to ${customerName(id)}.`)
-                  : undefined
-              }
-              onAskForPhoto={
-                source === 'demo'
-                  ? (id) => applyDemo((d) => askForPhotoDemo(d, id), `Asked ${customerName(id)} for a clearer photo.`)
-                  : undefined
-              }
-            />
-          </div>
-          <div className="min-w-0 lg:col-span-2 lg:row-start-1">
-            <SummaryCards summary={data.summary} />
-          </div>
-          <div className="min-w-0 lg:col-start-1 lg:row-start-3 lg:self-start">
+        {/* The queue is the job: it leads, full width. Figures and history sit below it. */}
+        <QuoteReviewPanel
+          reviews={data.reviews}
+          receipt={source === 'demo' ? receipt : null}
+          onApprove={
+            source === 'demo'
+              ? (id, price) => applyDemo((d) => approveDemoQuote(d, id, price), `Sent RM${price} to ${customerName(id)}.`)
+              : undefined
+          }
+          onAskForPhoto={
+            source === 'demo'
+              ? (id) => applyDemo((d) => askForPhotoDemo(d, id), `Asked ${customerName(id)} for a clearer photo.`)
+              : undefined
+          }
+        />
+
+        <SummaryCards summary={data.summary} />
+
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,7fr)_minmax(0,3fr)]">
+          <div className="min-w-0">
             <RecentQuotesTable quotes={data.quotes} source={data.source} />
           </div>
-          <div className="min-w-0 space-y-4 lg:col-start-2 lg:row-span-2 lg:row-start-2 lg:self-start">
+          <div className="min-w-0 space-y-4">
             <WorkflowActivityPanel activity={data.workflowActivity} />
             <RecentActivityPanel events={data.events} />
           </div>

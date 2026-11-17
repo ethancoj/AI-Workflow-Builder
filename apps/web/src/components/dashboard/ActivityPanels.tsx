@@ -1,4 +1,4 @@
-import { AlertTriangle, Calculator, FileText, MessageCircle, Workflow, type LucideIcon } from 'lucide-react'
+import { AlertTriangle, Calculator, CalendarCheck, FileText, MessageCircle, Workflow, type LucideIcon } from 'lucide-react'
 import Link from 'next/link'
 import { fullDate, timeAgo } from '@/lib/dashboard/format'
 import type { ActivityEvent, Section, WorkflowActivity } from '@/lib/dashboard/types'
@@ -7,9 +7,10 @@ import { Panel, SectionBody } from './Panel'
 export function WorkflowActivityPanel({ activity }: { activity: Section<WorkflowActivity> }) {
   return (
     <Panel
-      title="Workflow activity"
+      // Demo shows conversations per stage; My data (no WhatsApp yet) lists saved workflows.
+      title={activity.status === 'ready' && activity.data.kind === 'stages' ? 'Conversations by stage' : 'Your workflows'}
       action={
-        <Link href="/builder" className="text-xs font-medium text-brand-ink underline-offset-2 hover:underline">
+        <Link href="/builder" className="inline-flex min-h-10 items-center text-xs font-medium text-brand-ink underline-offset-2 hover:underline">
           Open builder
         </Link>
       }
@@ -66,7 +67,7 @@ function WorkflowList({ workflows }: { workflows: { id: string; name: string; cr
             {w.openable ? (
               <Link
                 href={`/builder?id=${w.id}`}
-                className="shrink-0 rounded-md border border-line px-2.5 py-1 text-xs font-medium text-ink hover:bg-brand-soft focus-visible:ring-2 focus-visible:ring-brand"
+                className="inline-flex min-h-10 shrink-0 items-center rounded-md border border-line px-3 text-xs font-medium text-ink hover:bg-brand-soft focus-visible:ring-2 focus-visible:ring-brand"
               >
                 Open
               </Link>
@@ -89,6 +90,7 @@ const EVENT_ICON: Record<ActivityEvent['kind'], LucideIcon> = {
   workflow: Workflow,
   rubric: Calculator,
   message: MessageCircle,
+  booking: CalendarCheck,
 }
 
 export function RecentActivityPanel({ events }: { events: Section<ActivityEvent[]> }) {

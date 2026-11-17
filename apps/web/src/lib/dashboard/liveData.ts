@@ -1,13 +1,13 @@
 import { apiErrorMessage, apiFetch } from '@/lib/api'
 import { listWorkflows, type WorkflowSummary } from '@/lib/workflow/workflowsApi'
-import { capitalise, formatPrice } from './format'
+import { capitalise } from './format'
 import type { ActivityEvent, OverviewData, QuoteRow, Section } from './types'
 
 // Builds the Overview from the logged-in merchant's real data. What exists today:
 // saved workflows (Supabase, RLS), rubrics and saved photo assessments (FastAPI).
 // No WhatsApp yet, so there are no customers, conversations or sent quotes.
 
-type RubricRow = { id: string; name: string; service_type: string; created_at: string }
+type RubricRow = { id: string; name: string; service_type: string; created_at: string; escalation_threshold?: number }
 type AssessmentRow = {
   id: string
   rubric_id: string | null
@@ -36,13 +36,14 @@ function toQuoteRow(a: AssessmentRow, rubrics: Map<string, RubricRow>): QuoteRow
     id: a.id,
     customer: null, // photos currently come from the Quotes test page, not customers
     service,
-    status: a.escalated ? 'needs_review' : 'draft',
+    status: a.escalated ? 'test_unsure' : 'test_sure',
     price: { min: a.price_estimate },
     receivedAt: a.created_at,
     confidence: a.confidence,
     level: a.level_name,
     photoUrl: a.image_url,
     reasoning: a.reasoning || undefined,
+    threshold: rubric?.escalation_threshold,
   }
 }
 
@@ -65,7 +66,7 @@ export async function loadLiveOverview(): Promise<OverviewData> {
     : { status: 'error', message: errorMessage(assessmentsR as PromiseRejectedResult) }
 
   const reviewsSection: Section<QuoteRow[]> = rows
-    ? { status: 'ready', data: rows.filter((r) => r.status === 'needs_review') }
+    ? { status: 'ready', data: rows.filter((r) => r.status === 'test_unsure') }
     : quotesSection
 
   // Recent activity is stitched together from whatever loaded.
@@ -78,19 +79,9 @@ export async function loadLiveOverview(): Promise<OverviewData> {
       events.push({ id: `r-${r.id}`, kind: 'rubric', text: `Pricing rubric “${r.name}” saved`, at: r.created_at }),
     )
   }
-  rows?.forEach((q) =>
-    events.push({
-      id: `q-${q.id}`,
-      kind: q.status === 'needs_review' ? 'review' : 'quote',
-      text:
-        q.status === 'needs_review'
-          ? `Test photo needs your review: ${q.service}`
-          : `AI quote from a test photo: ${q.service}, ${formatPrice(q.price)}`,
-      at: q.receivedAt,
-    }),
-  )
+  // Quote rows are already in the quotes table and review queue, so they aren't repeated here.
   events.sort((a, b) => b.at.localeCompare(a.at))
-  const allFailed = !workflows && rubricsR.status === 'rejected' && !rows
+  const allFailed = !workflows && rubricsR.status === 'rejected'
 
   return {
     source: 'live',
@@ -100,11 +91,12 @@ export async function loadLiveOverview(): Promise<OverviewData> {
         workflows: workflows
           ? { value: workflows.length, caption: 'saved · not deployed yet' }
           : unavailable('Couldn’t load workflows'),
-        quoteRequests: rows ? { value: rows.length, caption: 'photos assessed' } : unavailable('Couldn’t load quotes'),
-        awaitingReview: rows
-          ? { value: rows.filter((r) => r.status === 'needs_review').length, caption: 'the AI wasn’t sure about these' }
+        // No customers yet: every row is a test photo from the Pricing Rubric page, so say so.
+        quoteRequests: rows
+          ? { value: rows.length, caption: '', label: 'Photos tested' }
           : unavailable('Couldn’t load quotes'),
-        quotesSent: unavailable('Available once WhatsApp is connected'),
+        quotesSent: unavailable('Needs WhatsApp'),
+        booked: unavailable('Needs WhatsApp'),
       },
     },
     quotes: quotesSection,

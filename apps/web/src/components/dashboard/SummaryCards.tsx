@@ -1,81 +1,62 @@
 'use client'
 
-import { AlertTriangle, Inbox, Send, Workflow, type LucideIcon } from 'lucide-react'
 import type { Metric, Section, Summary } from '@/lib/dashboard/types'
-import { REVIEW_QUEUE_ID, REVIEW_TITLE } from './QuoteReviewPanel'
 
-// What needs the merchant comes first (DESIGN.md: Attention-First Rule).
-const CARDS: { key: keyof Summary; label: string; Icon: LucideIcon; highlight?: boolean; jumpTo?: string }[] = [
-  { key: 'awaitingReview', label: REVIEW_TITLE, Icon: AlertTriangle, highlight: true, jumpTo: REVIEW_QUEUE_ID },
-  { key: 'quoteRequests', label: 'Quote requests', Icon: Inbox },
-  { key: 'quotesSent', label: 'Quotes sent', Icon: Send },
-  { key: 'workflows', label: 'Saved workflows', Icon: Workflow },
+// A quiet row of figures under the review queue: big number, small label, no card chrome.
+// The queue above already covers what needs the merchant, so nothing here competes with it.
+const STATS: { key: keyof Summary; label: string }[] = [
+  { key: 'quoteRequests', label: 'Quote requests' },
+  { key: 'quotesSent', label: 'Quotes sent' },
+  { key: 'booked', label: 'Booked' },
+  { key: 'workflows', label: 'Saved workflows' },
 ]
 
-function Card({
-  label,
-  Icon,
-  metric,
-  highlight,
-  jumpTo,
-}: {
-  label: string
-  Icon: LucideIcon
-  metric?: Metric
-  highlight?: boolean
-  jumpTo?: string
-}) {
-  const className = `block rounded-[10px] border p-3 sm:p-4 ${highlight ? 'border-highlight-line bg-highlight' : 'border-line bg-surface'}`
-  const body = (
-    <>
-      <div className="flex items-start justify-between gap-2 text-sm text-muted">
-        <span className={highlight ? 'font-medium text-highlight-ink' : ''}>{label}</span>
-        <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${highlight ? 'text-amber-700' : 'text-brand-ink'}`} aria-hidden />
-      </div>
-      {metric ? (
-        <>
-          <p className="mt-1 text-2xl font-semibold leading-tight tabular-nums text-ink sm:mt-1.5 sm:text-[28px]">
-            {metric.value ?? <span className="text-muted" aria-label="Not available">—</span>}
-          </p>
-          <p className={`mt-1 text-xs ${highlight ? 'text-highlight-ink' : 'text-muted'}`}>{metric.caption}</p>
-        </>
-      ) : (
-        <div className="mt-2 h-8 w-16 animate-pulse rounded bg-brand-soft" role="status" aria-label="Loading" />
-      )}
-    </>
-  )
-
-  if (!jumpTo) return <div className={className}>{body}</div>
-
-  // Scrolls to the review queue and moves keyboard focus there too.
+function Stat({ label, metric }: { label: string; metric?: Metric }) {
   return (
-    <a
-      href={`#${jumpTo}`}
-      aria-label={`${label}: ${metric?.value ?? ''}. Go to the list`}
-      onClick={(e) => {
-        const target = document.getElementById(jumpTo)
-        if (!target) return
-        e.preventDefault()
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        target.focus({ preventScroll: true })
-      }}
-      className={`${className} hover:bg-divider focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2`}
-    >
-      {body}
-    </a>
+    <div className="min-w-0 py-1">
+      <dt className="text-xs text-muted">{metric?.label ?? label}</dt>
+      <dd className="mt-0.5">
+        {metric ? (
+          <>
+            <span className="block text-[28px] font-semibold leading-tight tracking-tight tabular-nums text-ink">
+              {metric.value ?? (
+                <span className="text-muted" role="img" aria-label="Not available">
+                  —
+                </span>
+              )}
+            </span>
+            {/* Only explain a missing figure; real numbers speak for themselves. */}
+            {metric.value === null && <span className="mt-0.5 block text-xs text-muted">{metric.caption}</span>}
+          </>
+        ) : (
+          <span className="mt-1 block h-8 w-14 animate-pulse rounded bg-brand-soft" role="status" aria-label="Loading" />
+        )}
+      </dd>
+    </div>
   )
 }
 
+const COLS: Record<number, string> = { 1: 'sm:grid-cols-1', 2: 'sm:grid-cols-2', 3: 'sm:grid-cols-3', 4: 'sm:grid-cols-4' }
+
 export default function SummaryCards({ summary }: { summary: Section<Summary> }) {
   const data = summary.status === 'ready' ? summary.data : undefined
+  // Figures that don't exist yet are named once in a footnote rather than shown as a row of "—".
+  const missing = data ? STATS.filter(({ key }) => data[key].value === null) : []
+  const shown = STATS.filter((s) => !missing.includes(s))
   return (
-    <section aria-label="Summary">
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        {CARDS.map(({ key, ...card }) => (
-          <Card key={key} {...card} metric={data?.[key]} />
+    <section aria-label="Summary" className="border-y border-divider py-3">
+      <dl
+        className={`grid grid-cols-2 gap-x-6 gap-y-3 ${COLS[shown.length] ?? 'sm:grid-cols-4'} sm:divide-x sm:divide-divider [&>*]:sm:pl-6 [&>*:first-child]:sm:pl-0`}
+      >
+        {shown.map(({ key, label }) => (
+          <Stat key={key} label={label} metric={data?.[key]} />
         ))}
-      </div>
-      <p className="mt-2 text-right text-xs text-muted">All figures are all-time.</p>
+      </dl>
+      <p className="mt-2 text-xs text-muted">
+        All figures are all-time.
+        {missing.length > 0 &&
+          ` ${missing.map((m) => m.label).join(' and ')} start once WhatsApp is connected.`}
+      </p>
     </section>
   )
 }

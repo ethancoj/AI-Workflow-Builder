@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Keep the dev-only "N" badge off the sidebar footer (bottom-left).
-  devIndicators: { position: "bottom-right" },
+  // No dev-only "N" badge: it covers the UI in screenshots and demos.
+  devIndicators: false,
   experimental: {
     // The dev filesystem cache (beta, on by default in Next 16) kept serving stale
     // CSS on this Windows setup after files changed. Turning it off only makes the
