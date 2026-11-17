@@ -1,6 +1,9 @@
-import { AlertCircle } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { AlertCircle, RotateCcw } from 'lucide-react'
+import { createContext, useContext, type ReactNode } from 'react'
 import type { Section } from '@/lib/dashboard/types'
+
+/** Reloads the page's data; provided by the Overview so every failed panel can offer “Try again”. */
+export const RetryContext = createContext<(() => void) | null>(null)
 
 /** White card with a heading, used by every Overview panel. */
 export function Panel({
@@ -34,7 +37,7 @@ export function Panel({
           {count !== undefined && (
             <span className="rounded-full bg-brand px-2 py-0.5 text-xs font-semibold tabular-nums text-brand-on">
               {count}
-              <span className="sr-only"> waiting</span>
+              <span className="sr-only"> waiting for you</span>
             </span>
           )}
         </h2>
@@ -57,9 +60,10 @@ export function SectionBody<T>({
   empty: ReactNode
   children: (data: T) => ReactNode
 }) {
+  const retry = useContext(RetryContext)
   if (section.status === 'loading') {
     return (
-      <div className="space-y-2" aria-busy="true" aria-label="Loading">
+      <div className="space-y-2" role="status" aria-busy="true" aria-label="Loading">
         <div className="h-4 w-3/4 animate-pulse rounded bg-brand-soft" />
         <div className="h-4 w-1/2 animate-pulse rounded bg-brand-soft" />
         <div className="h-4 w-2/3 animate-pulse rounded bg-brand-soft" />
@@ -68,10 +72,21 @@ export function SectionBody<T>({
   }
   if (section.status === 'error') {
     return (
-      <p role="alert" className="flex items-start gap-2 text-sm text-rose-700 dark:text-rose-300">
-        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-        <span>Couldn’t load this. {section.message}</span>
-      </p>
+      <div role="alert" className="flex flex-wrap items-start gap-x-3 gap-y-2 text-sm text-rose-700">
+        <p className="flex min-w-0 flex-1 items-start gap-2">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+          <span>Couldn’t load this. {section.message}</span>
+        </p>
+        {retry && (
+          <button
+            onClick={retry}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1 text-xs font-medium text-ink hover:bg-brand-soft focus-visible:ring-2 focus-visible:ring-brand"
+          >
+            <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+            Try again
+          </button>
+        )}
+      </div>
     )
   }
   if (isEmpty?.(section.data)) return <div className="text-sm text-muted">{empty}</div>

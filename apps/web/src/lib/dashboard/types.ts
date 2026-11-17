@@ -22,6 +22,10 @@ export type QuoteRow = {
   price: Price | null
   receivedAt: string // ISO timestamp
   confidence?: number
+  /** The condition level the AI picked from the rubric, e.g. "Moderately Dirty". */
+  level?: string
+  /** Short-lived link to the customer's photo (private bucket), when there is one. */
+  photoUrl?: string
 }
 
 /** value null = this metric isn't available yet; caption explains why. */

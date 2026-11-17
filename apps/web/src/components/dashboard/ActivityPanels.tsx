@@ -7,7 +7,7 @@ import { Panel, SectionBody } from './Panel'
 export function WorkflowActivityPanel({ activity }: { activity: Section<WorkflowActivity> }) {
   return (
     <Panel
-      title="Workflow Activity"
+      title="Workflow activity"
       action={
         <Link href="/builder" className="text-xs font-medium text-brand-ink underline-offset-2 hover:underline">
           Open builder
@@ -44,7 +44,7 @@ function StageBars({ stages }: { stages: { name: string; count: number }[] }) {
             <span className="text-ink">{s.name}</span>
             <span className="font-medium tabular-nums text-ink">{s.count}</span>
           </div>
-          <div className="mt-1 h-2 rounded-full bg-page" aria-hidden>
+          <div className="mt-1 h-2 rounded-full bg-brand-soft" aria-hidden>
             <div className="h-2 rounded-full bg-brand" style={{ width: `${(s.count / max) * 100}%` }} />
           </div>
         </li>
@@ -93,7 +93,7 @@ const EVENT_ICON: Record<ActivityEvent['kind'], LucideIcon> = {
 
 export function RecentActivityPanel({ events }: { events: Section<ActivityEvent[]> }) {
   return (
-    <Panel title="Recent Activity">
+    <Panel title="Recent activity">
       <SectionBody section={events} isEmpty={(e) => e.length === 0} empty="No activity yet.">
         {(list) => (
           <ol className="divide-y divide-divider">
@@ -101,7 +101,7 @@ export function RecentActivityPanel({ events }: { events: Section<ActivityEvent[
               const Icon = EVENT_ICON[e.kind]
               return (
                 <li key={e.id} className="flex gap-3 py-3 text-sm first:pt-0 last:pb-0">
-                  <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${e.kind === 'review' ? 'text-highlight-ink' : 'text-brand-ink'}`} aria-hidden />
+                  <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${e.kind === 'review' ? 'text-amber-700' : 'text-brand-ink'}`} aria-hidden />
                   <div className="min-w-0">
                     <p className="text-ink">{e.text}</p>
                     <time dateTime={e.at} title={fullDate(e.at)} className="text-xs text-muted">
