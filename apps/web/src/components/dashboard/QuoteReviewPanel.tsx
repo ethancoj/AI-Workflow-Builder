@@ -244,6 +244,12 @@ function ReviewDialog({
             <AlertTriangle className="mt-px h-3.5 w-3.5 shrink-0 text-amber-700" aria-hidden />
             {reasonText(quote)}
           </p>
+          {quote.reasoning && (
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-muted">What the AI saw</p>
+              <p className="text-sm text-ink">{quote.reasoning}</p>
+            </div>
+          )}
 
           <div className="space-y-1.5">
             <label htmlFor="final-price" className="font-medium">

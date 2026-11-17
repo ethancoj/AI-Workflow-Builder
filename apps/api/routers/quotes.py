@@ -28,7 +28,7 @@ from google import genai
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 
 from merchant_auth import current_merchant_id
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, model_validator
 from supabase import Client, create_client
 
 # ── Router setup ──────────────────────────────────────────────────────────────
@@ -43,7 +43,8 @@ class RubricLevel(BaseModel):
     level: int
     name: str
     description: str
-    price: float
+    price: float  # the price, or the lowest price when the level has a range
+    price_max: Optional[float] = None  # set for a price range (FR2.2), e.g. RM120–RM180
     visual_cues: list[str] = []
 
     @field_validator("price")
@@ -52,6 +53,15 @@ class RubricLevel(BaseModel):
         if v <= 0:
             raise ValueError("Price must be positive")
         return v
+
+    @model_validator(mode="after")
+    def range_must_be_ordered(self) -> "RubricLevel":
+        if self.price_max is not None and self.price_max <= self.price:
+            self.price_max = None  # "RM120 to RM120" (or a reversed range) is just one price
+        return self
+
+    def price_text(self) -> str:
+        return f"RM{self.price:.0f}" if self.price_max is None else f"RM{self.price:.0f}–RM{self.price_max:.0f}"
 
 
 class Rubric(BaseModel):
@@ -74,6 +84,8 @@ class AssessmentResult(BaseModel):
     condition_level: int
     level_name: str
     price_estimate: float
+    price_min: Optional[float] = None  # the matched level's price range, from the rubric
+    price_max: Optional[float] = None
     confidence: float
     reasoning: str
     key_observations: list[str]
@@ -103,7 +115,7 @@ def _build_prompt(rubric: Rubric) -> str:
     for lvl in sorted(rubric.levels, key=lambda x: x.level):
         cues = "\n    - ".join(lvl.visual_cues) if lvl.visual_cues else "Use your best judgment"
         levels_block += f"""
-**Level {lvl.level} — {lvl.name}** → RM{lvl.price:.0f}
+**Level {lvl.level} — {lvl.name}** → {lvl.price_text()}
   Condition: {lvl.description}
   Visual indicators:
     - {cues}
@@ -118,9 +130,9 @@ INSTRUCTIONS:
 Examine the submitted photo carefully and determine which condition level it most closely matches.
 
 REASONING CHECKLIST (think through these before answering):
-1. What is the overall cleanliness and condition of the unit?
-2. Are the components (fins, filters, surfaces) clearly visible or obscured?
-3. Which specific visual cues from the rubric can you identify in the photo?
+1. What is the overall condition of the item shown?
+2. Are the parts the rubric refers to clearly visible, or obscured, cropped or out of focus?
+3. Which specific visual indicators from the rubric can you identify in the photo?
 4. If the condition sits between two levels, which is the closer match and why?
 5. How confident are you? Consider: image clarity, angle, lighting, partial visibility.
 
@@ -130,7 +142,7 @@ Return ONLY a valid JSON object — no markdown fences, no preamble, no explanat
 {{
   "condition_level": <integer — must be one of the rubric level numbers>,
   "level_name": "<exact level name string from the rubric>",
-  "price_estimate": <number — the price from the matched rubric level>,
+  "price_estimate": <number — the matched level's price; if it has a range, a price within that range (higher for worse condition within the level)>,
   "confidence": <float 0.0–1.0, see calibration below>,
   "reasoning": "<2–3 sentences: what you observed and why you chose this level>",
   "key_observations": [
@@ -281,6 +293,17 @@ async def assess_image(rubric: Rubric, image_bytes: bytes, content_type: str, mo
             detail=f"Model returned invalid level {vlm.get('condition_level')}. Expected one of {sorted(valid_levels)}",
         )
 
+    # The price always comes from the merchant's rubric: clamp the model's figure into the
+    # matched level's range so a model can never quote outside what the merchant set.
+    matched = next(lvl for lvl in rubric.levels if lvl.level == vlm["condition_level"])
+    high = matched.price_max if matched.price_max is not None else matched.price
+    try:
+        estimate = float(vlm.get("price_estimate", matched.price))
+    except (TypeError, ValueError):
+        estimate = matched.price
+    vlm["price_estimate"] = min(max(estimate, matched.price), high)
+    vlm["price_min"], vlm["price_max"] = matched.price, matched.price_max
+
     confidence = float(vlm.get("confidence", 0.0))
     return vlm, confidence, confidence < rubric.escalation_threshold
 
@@ -356,6 +379,8 @@ async def assess_photo(
         condition_level=vlm["condition_level"],
         level_name=vlm["level_name"],
         price_estimate=float(vlm["price_estimate"]),
+        price_min=vlm.get("price_min"),
+        price_max=vlm.get("price_max"),
         confidence=confidence,
         reasoning=vlm.get("reasoning", ""),
         key_observations=vlm.get("key_observations", []),

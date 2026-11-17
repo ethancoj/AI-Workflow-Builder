@@ -48,6 +48,8 @@ type BuilderState = {
 
   newWorkflow: () => void
   loadWorkflow: (id: string, name: string, flow: WorkflowJson) => void
+  /** Puts a template on the canvas as a new, unsaved workflow. */
+  loadTemplate: (name: string, flow: WorkflowJson) => void
   markSaved: (id: string, name: string) => void
   /** The canvas as saved JSON, without UI-only fields like selection or measured size. */
   toWorkflowJson: () => WorkflowJson
@@ -128,6 +130,15 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       workflowId: id,
       workflowName: name,
       dirty: false,
+    }),
+
+  loadTemplate: (name, flow) =>
+    set({
+      nodes: flow.nodes.map((n) => ({ ...n, selected: false })),
+      edges: flow.edges.map((e) => ({ ...e, selected: false })),
+      workflowId: null,
+      workflowName: name,
+      dirty: true,
     }),
 
   markSaved: (id, name) => set({ workflowId: id, workflowName: name, dirty: false }),

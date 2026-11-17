@@ -209,7 +209,7 @@ def test_llm_gets_the_conversation_history():
 def test_unusable_photo_gets_a_retry_instead_of_ending():
     svc = FakeServices(confidence=0.1, unusable=True)
     t = run(aircon_flow(), {"node": "q", "history": []}, PHOTO, svc)
-    assert t.replies[0].text.startswith("Sorry, I couldn't make out the unit")
+    assert t.replies[0].text.startswith("Sorry, I couldn't make it out")
     assert t.state["node"] == "q" and not t.finished
     assert t.state["photo_attempts"] == 1
 

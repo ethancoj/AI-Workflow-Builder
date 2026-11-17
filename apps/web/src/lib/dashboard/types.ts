@@ -26,6 +26,8 @@ export type QuoteRow = {
   level?: string
   /** Short-lived link to the customer's photo (private bucket), when there is one. */
   photoUrl?: string
+  /** The AI's own explanation of what it saw in the photo. */
+  reasoning?: string
 }
 
 /** value null = this metric isn't available yet; caption explains why. */

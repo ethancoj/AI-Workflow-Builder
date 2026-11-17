@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import Link from "next/link";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import {
   AlertCircle,
@@ -22,7 +23,8 @@ interface RubricLevel {
   level: number;
   name: string;
   description: string;
-  price: number;
+  price: number; // the price, or the lowest price of a range
+  price_max?: number | null; // set for a range, e.g. RM120–RM180
   visual_cues: string[];
 }
 
@@ -39,6 +41,8 @@ interface AssessmentResult {
   condition_level: number;
   level_name: string;
   price_estimate: number;
+  price_min?: number | null;
+  price_max?: number | null;
   confidence: number;
   reasoning: string;
   key_observations: string[];
@@ -75,6 +79,7 @@ const DEFAULT_RUBRIC: Rubric = {
       name: "Moderately Dirty",
       description: "Noticeable dust build-up, partial airflow restriction. Chemical wash recommended.",
       price: 120,
+      price_max: 150,
       visual_cues: ["thick dust layer", "some fins blocked", "brownish or grey tint", "dust clumps visible"],
     },
     {
@@ -82,6 +87,7 @@ const DEFAULT_RUBRIC: Rubric = {
       name: "Heavily Soiled / Mouldy",
       description: "Severe contamination, possible mould. Full chemical overhaul required.",
       price: 180,
+      price_max: 250,
       visual_cues: ["black or green mould spots", "completely blocked fins", "slime or bio-film present", "dark colouring throughout"],
     },
   ],
@@ -114,6 +120,47 @@ function confidenceLabel(c: number) {
 
 const pct = (n: number) => `${(n * 100).toFixed(0)}%`;
 
+/** RM80, or RM120–RM150 for a range. */
+const priceText = (min: number, max?: number | null) =>
+  max != null && max > min ? `RM${min}–RM${max}` : `RM${min}`;
+
+const splitCues = (raw: string) => raw.split(/[\n,]/).map((c) => c.trim()).filter(Boolean);
+
+/** Keeps the raw text while typing (so commas and new lines aren't swallowed) and reports the list. */
+function CuesInput({
+  id,
+  cues,
+  onChange,
+  describedBy,
+}: {
+  id: string;
+  cues: string[];
+  onChange: (cues: string[]) => void;
+  describedBy: string;
+}) {
+  const [raw, setRaw] = useState(() => cues.join("\n"));
+  // A level was removed or reset elsewhere: show its cues instead of stale text.
+  const [shown, setShown] = useState(cues);
+  if (cues !== shown) {
+    setShown(cues);
+    if (splitCues(raw).join("|") !== cues.join("|")) setRaw(cues.join("\n"));
+  }
+  return (
+    <textarea
+      id={id}
+      rows={Math.max(3, cues.length)}
+      value={raw}
+      onChange={(e) => {
+        setRaw(e.target.value);
+        onChange(splitCues(e.target.value));
+      }}
+      placeholder={"e.g.\nlight grey coating\nfins still visible"}
+      aria-describedby={describedBy}
+      className={`${inputClass} resize-y`}
+    />
+  );
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function QuoteDemo() {
@@ -128,6 +175,11 @@ export default function QuoteDemo() {
   const [saveToDashboard, setSaveToDashboard] = useState(true);
   const [saveStatus, setSaveStatus] = useState<{ ok: boolean; message: string } | null>(null);
   const [saving, setSaving] = useState(false);
+  const saveStatusRef = useRef<HTMLDivElement>(null);
+  // Bring the save result (and the "Create a chatbot" button) into view: the buttons sit at the page bottom.
+  useEffect(() => {
+    if (saveStatus) saveStatusRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [saveStatus]);
 
   // ── Dropzone ──────────────────────────────────────────────────────────────
 
@@ -185,7 +237,7 @@ export default function QuoteDemo() {
       if (!res.ok) throw new Error(await apiErrorMessage(res));
       const { id } = await res.json();
       setRubric((r) => ({ ...r, id }));
-      setSaveStatus({ ok: true, message: "Rubric saved. You can now choose it in a Photo Quote step." });
+      setSaveStatus({ ok: true, message: "Rubric saved. Next, turn it into a WhatsApp chatbot. You can also pick it in any Photo Quote step." });
     } catch (e: unknown) {
       setSaveStatus({ ok: false, message: `Couldn’t save the rubric. ${e instanceof Error ? e.message : ""}`.trim() });
     } finally {
@@ -202,9 +254,6 @@ export default function QuoteDemo() {
     setRubric({ ...rubric, levels });
   };
 
-  const updateCues = (index: number, raw: string) => {
-    updateLevel(index, "visual_cues", raw.split(",").map((s) => s.trim()).filter(Boolean));
-  };
 
   const addLevel = () => {
     const next = rubric.levels.length + 1;
@@ -325,7 +374,7 @@ export default function QuoteDemo() {
                     aria-label={`Level ${lvl.level} name`}
                     className={`${inputClass} min-w-40 flex-1 font-medium`}
                   />
-                  <div className="flex shrink-0 items-center gap-1.5">
+                  <div className="flex shrink-0 items-center gap-1.5" role="group" aria-label={`Level ${lvl.level} price`}>
                     <span className="text-sm font-medium text-muted" aria-hidden>
                       RM
                     </span>
@@ -334,8 +383,21 @@ export default function QuoteDemo() {
                       min={0}
                       value={lvl.price}
                       onChange={(e) => updateLevel(i, "price", parseFloat(e.target.value))}
-                      aria-label={`Level ${lvl.level} price in RM`}
-                      className={`${inputClass} w-24 text-right tabular-nums`}
+                      aria-label={`Level ${lvl.level} price in RM (or lowest price)`}
+                      className={`${inputClass} w-20 text-right tabular-nums`}
+                    />
+                    <span className="text-sm text-muted">to</span>
+                    <input
+                      type="number"
+                      min={0}
+                      value={lvl.price_max ?? ""}
+                      placeholder="—"
+                      onChange={(e) =>
+                        updateLevel(i, "price_max", e.target.value === "" ? null : parseFloat(e.target.value))
+                      }
+                      aria-label={`Level ${lvl.level} highest price in RM (optional)`}
+                      title="Optional. Leave empty for one fixed price."
+                      className={`${inputClass} w-20 text-right tabular-nums`}
                     />
                   </div>
                   {rubric.levels.length > 1 && (
@@ -351,7 +413,7 @@ export default function QuoteDemo() {
                 </div>
                 <div className="space-y-1.5">
                   <label htmlFor={`level-${i}-desc`} className={labelClass}>
-                    What this condition means
+                    What this condition looks like
                   </label>
                   <input
                     id={`level-${i}-desc`}
@@ -364,19 +426,16 @@ export default function QuoteDemo() {
                 </div>
                 <div className="space-y-1.5">
                   <label htmlFor={`level-${i}-cues`} className={labelClass}>
-                    What to look for in the photo
+                    Signs to spot in the photo
                   </label>
-                  <input
+                  <CuesInput
                     id={`level-${i}-cues`}
-                    type="text"
-                    value={lvl.visual_cues.join(", ")}
-                    onChange={(e) => updateCues(i, e.target.value)}
-                    placeholder="e.g. light grey coating, fins visible, no blockage"
-                    aria-describedby={`level-${i}-cues-hint`}
-                    className={inputClass}
+                    cues={lvl.visual_cues}
+                    onChange={(cues) => updateLevel(i, "visual_cues", cues)}
+                    describedBy={`level-${i}-cues-hint`}
                   />
                   <p id={`level-${i}-cues-hint`} className="text-xs text-muted">
-                    Separate with commas. The AI checks the photo for these signs.
+                    One sign per line (or separate with commas). The AI looks for these in the customer’s photo.
                   </p>
                   {lvl.visual_cues.length > 0 && (
                     <ul className="flex flex-wrap gap-1.5 pt-1" aria-label="Signs the AI looks for">
@@ -406,17 +465,36 @@ export default function QuoteDemo() {
               </button>
             </div>
             {saveStatus && (
-              <p
+              <div
+                ref={saveStatusRef}
                 role={saveStatus.ok ? "status" : "alert"}
-                className={`animate-arrive flex items-start gap-2 text-sm ${saveStatus.ok ? "text-ink" : "text-rose-700"}`}
+                className={`animate-arrive flex items-start gap-3 rounded-[10px] border p-4 text-sm ${
+                  saveStatus.ok ? "border-line bg-surface text-ink" : "border-rose-200 bg-rose-50 text-rose-700"
+                }`}
               >
                 {saveStatus.ok ? (
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" aria-hidden />
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" aria-hidden />
                 ) : (
                   <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
                 )}
-                {saveStatus.message}
-              </p>
+                <span className="block space-y-3">
+                  <span className="block font-medium">{saveStatus.message}</span>
+                  {saveStatus.ok && rubric.id && (
+                    <Link
+                      href={`/builder?${new URLSearchParams({
+                        template: "photo-quote",
+                        rubric: rubric.id,
+                        rubricName: rubric.name,
+                        service: rubric.service_type,
+                      })}`}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-3 py-1.5 text-sm font-medium text-brand-on hover:bg-brand/80 focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+                    >
+                      Create a chatbot from this rubric
+                      <ArrowRight className="h-4 w-4" aria-hidden />
+                    </Link>
+                  )}
+                </span>
+              </div>
             )}
           </div>
         )}
@@ -473,7 +551,7 @@ export default function QuoteDemo() {
               <ul className="flex flex-wrap gap-2">
                 {rubric.levels.map((lvl) => (
                   <li key={lvl.level} className="rounded-full border border-line px-3 py-1 text-xs text-ink">
-                    {lvl.name || `Level ${lvl.level}`} · <span className="tabular-nums">RM{lvl.price}</span>
+                    {lvl.name || `Level ${lvl.level}`} · <span className="tabular-nums">{priceText(lvl.price, lvl.price_max)}</span>
                   </li>
                 ))}
                 <li className="rounded-full border border-dashed border-line px-3 py-1 text-xs text-muted">
@@ -559,6 +637,9 @@ function Result({ result, threshold }: { result: AssessmentResult; threshold: nu
           <div className="space-y-1">
             <dt className="text-xs font-medium text-muted">Estimated price</dt>
             <dd className="text-[28px] font-semibold leading-tight tabular-nums text-ink">RM{result.price_estimate}</dd>
+            {result.price_min != null && result.price_max != null && (
+              <dd className="text-xs text-muted">Your range for this level: {priceText(result.price_min, result.price_max)}</dd>
+            )}
           </div>
         </dl>
 

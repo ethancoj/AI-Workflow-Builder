@@ -6,7 +6,9 @@ import AccountMenu from '@/components/auth/AccountMenu'
 import { NavButton, useShell } from '@/components/shell/AppShell'
 import { useTestRunStore } from '@/lib/workflow/testRunStore'
 import { ChecksButton } from './WorkflowChecks'
+import { apiFetch } from '@/lib/api'
 import { DEFAULT_WORKFLOW_NAME, useBuilderStore } from '@/lib/workflow/builderStore'
+import { photoQuoteTemplate, type TemplateRubric } from '@/lib/workflow/templates'
 import {
   createWorkflow,
   getWorkflow,
@@ -23,7 +25,22 @@ function setUrlWorkflowId(id: string | null) {
   const url = new URL(window.location.href)
   if (id) url.searchParams.set('id', id)
   else url.searchParams.delete('id')
+  // A template link (?template=…) is used once; drop it so a refresh doesn't rebuild it.
+  ;['template', 'rubric', 'rubricName', 'service'].forEach((k) => url.searchParams.delete(k))
   window.history.replaceState(null, '', url)
+}
+
+/** The merchant's most recently saved rubric, so a template can be ready to test straight away. */
+async function latestRubric(): Promise<{ rubric: TemplateRubric; service?: string }> {
+  try {
+    const res = await apiFetch('/api/quotes/rubrics')
+    if (!res.ok) return { rubric: null }
+    const list = (await res.json()) as { id: string; name: string; service_type?: string; created_at?: string }[]
+    const last = [...list].sort((a, b) => (b.created_at ?? '').localeCompare(a.created_at ?? ''))[0]
+    return last ? { rubric: { id: last.id, name: last.name }, service: last.service_type } : { rubric: null }
+  } catch {
+    return { rubric: null }
+  }
 }
 
 const confirmDiscard = () =>
@@ -90,7 +107,17 @@ export default function WorkflowBar() {
       .then((list) => !cancelled && setWorkflows(list))
       .catch((e: Error) => !cancelled && showStatus({ kind: 'error', text: `Couldn't load your workflows: ${e.message}` }))
 
-    const idFromUrl = new URLSearchParams(window.location.search).get('id')
+    const params = new URLSearchParams(window.location.search)
+    const idFromUrl = params.get('id')
+    // From the Pricing Rubric page: "Create a chatbot from this rubric".
+    if (!idFromUrl && params.get('template') === 'photo-quote') {
+      const rubricId = params.get('rubric')
+      const rubric = rubricId ? { id: rubricId, name: params.get('rubricName') ?? 'Your pricing rubric' } : null
+      const { name, flow } = photoQuoteTemplate(rubric, params.get('service') ?? undefined)
+      useBuilderStore.getState().loadTemplate(name, flow)
+      setUrlWorkflowId(null)
+      requestAnimationFrame(() => fitView({ padding: 0.15 }))
+    }
     if (idFromUrl) {
       getWorkflow(idFromUrl)
         .then((wf) => !cancelled && applyLoaded(wf))
@@ -103,7 +130,7 @@ export default function WorkflowBar() {
     return () => {
       cancelled = true
     }
-  }, [applyLoaded, showStatus])
+  }, [applyLoaded, fitView, showStatus])
 
   // Ask before closing or refreshing the tab with unsaved work.
   useEffect(() => {
@@ -143,6 +170,21 @@ export default function WorkflowBar() {
     setUrlWorkflowId(null)
     requestAnimationFrame(() => fitView({ padding: 0.2 }))
     setStatus(null)
+  }
+
+  const startFromTemplate = async () => {
+    if (!confirmDiscard()) return
+    setBusy(true)
+    const { rubric, service } = await latestRubric()
+    const { name, flow } = photoQuoteTemplate(rubric, service)
+    useBuilderStore.getState().loadTemplate(name, flow)
+    setUrlWorkflowId(null)
+    setBusy(false)
+    requestAnimationFrame(() => fitView({ padding: 0.15 }))
+    showStatus({
+      kind: 'ok',
+      text: rubric ? `Template ready, using “${rubric.name}”. Try it in Test chat, then Save.` : 'Template ready. Pick a pricing rubric in the Photo Quote step.',
+    })
   }
 
   const buttonClass =
@@ -196,9 +238,20 @@ export default function WorkflowBar() {
         >
           {testing ? 'Close test chat' : 'Test chat'}
         </button>
-        <button onClick={startNew} disabled={busy} className={buttonClass}>
-          New
-        </button>
+        <select
+          value=""
+          disabled={busy}
+          onChange={(e) => {
+            if (e.target.value === 'blank') startNew()
+            else if (e.target.value === 'photo-quote') startFromTemplate()
+          }}
+          aria-label="Start a new workflow"
+          className={buttonClass}
+        >
+          <option value="">New…</option>
+          <option value="blank">Blank workflow</option>
+          <option value="photo-quote">From template: Photo quote chatbot</option>
+        </select>
         <button onClick={() => save(true)} disabled={busy} className={buttonClass} title="Save as a separate workflow">
           Save as copy
         </button>
