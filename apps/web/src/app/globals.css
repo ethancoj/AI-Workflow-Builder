@@ -91,6 +91,124 @@
   }
 }
 
+/*
+ * Motion: quick, quiet feedback (the "Shop Ledger" is calm, not bouncy).
+ *   - every control eases its colour/border/shadow changes (150ms) and gives a small press
+ *   - .animate-arrive    chat messages and new items settle in
+ *   - .animate-pop       menus and dropdowns open
+ *   - .step-ran-flash    test chat: the steps a message went through light up in order
+ *   - .typing-dot        "bot is typing" dots
+ * Reduced motion keeps colour/opacity feedback and drops movement.
+ */
+@layer base {
+  button,
+  a,
+  select,
+  summary,
+  [role="button"],
+  input,
+  textarea {
+    transition-property: color, background-color, border-color, box-shadow, opacity, transform;
+    transition-duration: 150ms;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  button:not(:disabled):active,
+  [role="button"]:active {
+    transform: scale(0.97);
+    transition-duration: 60ms;
+  }
+}
+
+@keyframes arrive {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+@keyframes step-ran {
+  0% {
+    opacity: 0;
+    box-shadow: 0 0 0 0 rgb(10 10 10 / 0.45);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    box-shadow: 0 0 0 14px rgb(10 10 10 / 0);
+  }
+}
+@keyframes typing {
+  0%, 80%, 100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
+.animate-arrive {
+  animation: arrive 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.animate-pop {
+  transform-origin: top right;
+  animation: pop 160ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.step-ran-flash {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  animation: step-ran 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.typing-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--muted);
+  animation: typing 1s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) {
+  animation-delay: 150ms;
+}
+.typing-dot:nth-child(3) {
+  animation-delay: 300ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button:not(:disabled):active,
+  [role="button"]:active {
+    transform: none;
+  }
+  @keyframes arrive {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes pop {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes typing {
+    0%, 80%, 100% {
+      opacity: 0.25;
+    }
+    40% {
+      opacity: 1;
+    }
+  }
+}
+
 body {
   background: var(--page);
   color: var(--ink);

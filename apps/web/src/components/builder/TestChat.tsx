@@ -4,6 +4,7 @@ import { ImagePlus, RotateCcw, Send, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { apiErrorMessage, apiFetch } from '@/lib/api'
 import { useBuilderStore } from '@/lib/workflow/builderStore'
+import { NODE_META, isWorkflowNodeType } from '@/lib/workflow/nodeMeta'
 import { useTestRunStore } from '@/lib/workflow/testRunStore'
 import { useIssues } from './WorkflowChecks'
 
@@ -150,9 +151,18 @@ export default function TestChat() {
           </p>
         )}
         {items.map((item) => (
-          <ChatBubble key={item.id} item={item} showSteps={showSteps} />
+          <div key={item.id} className="animate-arrive">
+            <ChatBubble item={item} showSteps={showSteps} />
+          </div>
         ))}
-        {busy && <p className="text-xs text-muted">Workflow is running…</p>}
+        {busy && (
+          <div className="animate-arrive mr-8 inline-flex items-center gap-1 rounded-lg rounded-bl-sm border border-line bg-surface px-3 py-2.5">
+            <span className="typing-dot" />
+            <span className="typing-dot" />
+            <span className="typing-dot" />
+            <span className="sr-only">The bot is replying…</span>
+          </div>
+        )}
         <div ref={listEnd} />
       </div>
 
@@ -279,12 +289,14 @@ function ChatBubble({ item, showSteps }: { item: ChatItem; showSteps: boolean })
   )
 }
 
+const stepName = (type: string) => (isWorkflowNodeType(type) ? NODE_META[type].label : type)
+
 function Steps({ trace }: { trace: TraceStep[] }) {
   return (
     <ol className="space-y-0.5 pl-1 text-[11px] text-muted">
       {trace.map((t, i) => (
         <li key={i}>
-          <span className="font-medium capitalize text-ink">{t.node_type === 'llm' ? 'LLM' : t.node_type}</span>: {t.note}
+          <span className="font-medium text-ink">{stepName(t.node_type)}</span>: {t.note}
         </li>
       ))}
     </ol>

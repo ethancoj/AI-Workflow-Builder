@@ -277,7 +277,7 @@ async def run_turn(
                 if b.get("match") == "keyword":
                     kw = _contains_keyword(message.text, _words(b.get("value", "")))
                     if kw:
-                        chosen, note = b["id"], f"Keyword “{kw}” matched"
+                        chosen, note = b["id"], f"Message has the word “{kw}”"
                         break
             if chosen is None:
                 intent_branches = [b for b in branches if b.get("match") == "intent" and str(b.get("value", "")).strip()]
@@ -286,17 +286,17 @@ async def run_turn(
                     found = await services.classify_intent(message.text, intents)
                     for b in intent_branches:
                         if found and str(b["value"]).strip().lower() == found.lower():
-                            chosen, note = b["id"], f"Intent “{b['value']}” detected"
+                            chosen, note = b["id"], f"Customer wants: {str(b['value']).strip().replace('_', ' ')}"
                             break
             if chosen is None:
-                chosen, note = CONDITION_ELSE, "No branch matched, took “Otherwise”"
+                chosen, note = CONDITION_ELSE, "No path matched, went down “Otherwise”"
             trace.append(TraceStep(current, "condition", note))
             current = graph.next_id(current, chosen)
 
         elif ntype == "quote":
             rubric_id = data.get("rubricId")
             if not rubric_id:
-                raise WorkflowError("A Quote step has no pricing rubric selected.")
+                raise WorkflowError("A Photo Quote step has no pricing rubric chosen. Pick one in the step’s settings.")
             if not message.has_photo:
                 say(Reply(ASK_FOR_PHOTO))
                 trace.append(TraceStep(current, "quote", "No photo yet, asked the customer for one"))
@@ -336,7 +336,7 @@ async def run_turn(
             if replies:
                 trace.append(TraceStep(current, "end", "Conversation finished"))
             else:
-                trace.append(TraceStep(current, "end", "Reached an End step with no message: add one so customers get a proper reply"))
+                trace.append(TraceStep(current, "end", "Reached an End step with no closing message: add one so customers get a proper reply"))
             return finish()
 
         else:

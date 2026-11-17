@@ -30,7 +30,7 @@ export default function Canvas() {
 
       const position = screenToFlowPosition({ x: event.clientX, y: event.clientY })
       if (!addNode(type, position)) {
-        alert('A workflow can only have one Start node.')
+        alert('A workflow can only have one Start step. Use the one already on the canvas.')
       }
     },
     [screenToFlowPosition, addNode],

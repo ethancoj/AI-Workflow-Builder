@@ -2,7 +2,7 @@
 
 import { Handle, Position, useUpdateNodeInternals, type NodeProps, type NodeTypes } from '@xyflow/react'
 import { useEffect, type ReactNode } from 'react'
-import { NODE_META } from '@/lib/workflow/nodeMeta'
+import { NODE_META, intentLabel } from '@/lib/workflow/nodeMeta'
 import { useTestRunStore } from '@/lib/workflow/testRunStore'
 import { NodeIssueBadge } from './WorkflowChecks'
 import {
@@ -34,16 +34,20 @@ function NodeCard({
 }) {
   const meta = NODE_META[type]
   // Test chat feedback: which steps ran on the last message, and where it's waiting now.
-  const ran = useTestRunStore((s) => s.ranNodeIds.includes(id))
+  // Position in the run, so the flash travels along the path the message took.
+  const order = useTestRunStore((s) => s.ranNodeIds.indexOf(id))
+  const runId = useTestRunStore((s) => s.runId)
+  const ran = order >= 0
   const waiting = useTestRunStore((s) => s.waitingNodeId === id)
   return (
     <div
-      className={`relative w-60 rounded-lg bg-white text-slate-800 shadow-md ${ran || waiting ? 'ring-4 ring-black/80 ring-offset-2' : ''}`}
+      className={`relative w-60 rounded-lg bg-white text-slate-800 shadow-md transition-[box-shadow] duration-200 hover:shadow-lg ${ran || waiting ? 'ring-4 ring-black/80 ring-offset-2' : ''}`}
       style={{ outline: selected ? `3px solid ${meta.color}` : '1px solid #e2e8f0', outlineOffset: selected ? 2 : 0 }}
     >
+      {ran && <span key={runId} aria-hidden className="step-ran-flash" style={{ animationDelay: `${order * 140}ms` }} />}
       <NodeIssueBadge nodeId={id} />
       {waiting && (
-        <span className="absolute -top-3 right-2 rounded-full bg-black px-2 py-0.5 text-[10px] font-semibold text-white">
+        <span className="animate-pop absolute -top-3 right-2 rounded-full bg-black px-2 py-0.5 text-[10px] font-semibold text-white">
           Waiting for customer
         </span>
       )}
@@ -78,9 +82,9 @@ function OutputRow({ id, label, tone = 'text-slate-600' }: { id: string; label: 
 function StartNodeView({ id, data, selected }: NodeProps<StartNode>) {
   const text =
     data.trigger === 'any_message'
-      ? 'Any incoming message'
+      ? 'Any message from a customer'
       : data.keywords.length
-        ? `Keywords: ${data.keywords.join(', ')}`
+        ? `Messages with: ${data.keywords.join(', ')}`
         : ''
   return (
     <NodeCard id={id} type="start" selected={selected} hasInput={false}>
@@ -93,8 +97,8 @@ function StartNodeView({ id, data, selected }: NodeProps<StartNode>) {
 function LlmNodeView({ id, data, selected }: NodeProps<LlmNode>) {
   return (
     <NodeCard id={id} type="llm" selected={selected} hasInput>
-      <Summary text={data.persona} empty="Needs setup: no persona" />
-      <Summary text={data.instructions} empty="Needs setup: no instructions" />
+      <Summary text={data.persona} empty="Needs setup: who is replying?" />
+      <Summary text={data.instructions} empty="Needs setup: what should the reply do?" />
       <Handle type="source" position={Position.Bottom} className={handleClass} />
     </NodeCard>
   )
@@ -110,12 +114,12 @@ function ConditionNodeView({ id, data, selected }: NodeProps<ConditionNode>) {
 
   return (
     <NodeCard id={id} type="condition" selected={selected} hasInput>
-      {data.branches.length === 0 && <p className="italic text-amber-600">Needs setup: add a branch</p>}
+      {data.branches.length === 0 && <p className="italic text-amber-600">Needs setup: add a path</p>}
       {data.branches.map((b) => (
         <OutputRow
           key={b.id}
           id={b.id}
-          label={b.value.trim() ? `${b.match === 'intent' ? 'Intent' : 'Keyword'}: ${b.value}` : 'Empty branch'}
+          label={b.value.trim() ? (b.match === 'intent' ? `Wants to: ${intentLabel(b.value)}` : `Has the word: ${b.value.trim()}`) : 'Empty path'}
           tone={b.value.trim() ? 'text-slate-600' : 'italic text-amber-600'}
         />
       ))}
@@ -127,7 +131,7 @@ function ConditionNodeView({ id, data, selected }: NodeProps<ConditionNode>) {
 function QuoteNodeView({ id, data, selected }: NodeProps<QuoteNode>) {
   return (
     <NodeCard id={id} type="quote" selected={selected} hasInput>
-      <Summary text={data.rubricName ?? ''} empty="Needs setup: choose a rubric" />
+      <Summary text={data.rubricName ?? ''} empty="Needs setup: choose a pricing rubric" />
       <OutputRow id={QUOTE_QUOTED_HANDLE} label="✓ Quoted" tone="text-emerald-600" />
       <OutputRow id={QUOTE_ESCALATED_HANDLE} label="⚠ Needs human review" tone="text-rose-600" />
     </NodeCard>

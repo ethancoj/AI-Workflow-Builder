@@ -66,7 +66,7 @@ function WorkflowList({ workflows }: { workflows: { id: string; name: string; cr
             {w.openable ? (
               <Link
                 href={`/builder?id=${w.id}`}
-                className="shrink-0 rounded-md border border-line px-2.5 py-1 text-xs font-medium text-ink hover:bg-page focus-visible:ring-2 focus-visible:ring-brand"
+                className="shrink-0 rounded-md border border-line px-2.5 py-1 text-xs font-medium text-ink hover:bg-brand-soft focus-visible:ring-2 focus-visible:ring-brand"
               >
                 Open
               </Link>

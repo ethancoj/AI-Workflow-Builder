@@ -89,7 +89,7 @@ class LiveServices:
     async def quote_photo(self, rubric_id: str, image: bytes, image_type: str) -> QuoteOutcome:
         rubric = load_rubric(rubric_id, self.merchant_id)
         if rubric is None:
-            raise WorkflowError("The Quote step’s pricing rubric no longer exists. Pick another one in the step settings.")
+            raise WorkflowError("The Photo Quote step’s pricing rubric no longer exists. Pick another one in the step’s settings.")
         model = os.getenv("RUNTIME_VISION_MODEL", "gpt4o")
         try:
             vlm, confidence, escalated = await assess_image(rubric, image, image_type, model)  # type: ignore[arg-type]
