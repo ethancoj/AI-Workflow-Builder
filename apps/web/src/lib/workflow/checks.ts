@@ -1,4 +1,5 @@
 import type { Edge } from '@xyflow/react'
+import { NODE_META, intentLabel } from './nodeMeta'
 import {
   CONDITION_ELSE_HANDLE,
   QUOTE_ESCALATED_HANDLE,
@@ -27,13 +28,6 @@ export type Issue = {
 
 export const DEFAULT_END_MESSAGE = 'Thanks for your message! Someone from our team will get back to you shortly.'
 
-const STEP_NAMES: Record<WorkflowNode['type'], string> = {
-  start: 'Start',
-  llm: 'LLM Response',
-  condition: 'Condition',
-  quote: 'Quote',
-  end: 'End',
-}
 
 export function checkWorkflow(nodes: WorkflowNode[], edges: Edge[]): Issue[] {
   const issues: Issue[] = []
@@ -65,7 +59,7 @@ export function checkWorkflow(nodes: WorkflowNode[], edges: Edge[]): Issue[] {
   }
 
   for (const n of nodes) {
-    const name = STEP_NAMES[n.type]
+    const name = NODE_META[n.type].label
 
     if (n.type !== 'start' && start && !reachable.has(n.id)) {
       issues.push({
@@ -85,7 +79,7 @@ export function checkWorkflow(nodes: WorkflowNode[], edges: Edge[]): Issue[] {
             severity: 'error',
             nodeId: n.id,
             title: 'Start needs at least one keyword',
-            detail: 'It only starts when a message contains a keyword, but none are set. Add keywords or choose “any message”.',
+            detail: 'It only starts when a message has one of your keywords, but none are set. Add keywords, or choose “any message”.',
           })
         }
         if (!out(n.id)) {
@@ -105,8 +99,8 @@ export function checkWorkflow(nodes: WorkflowNode[], edges: Edge[]): Issue[] {
             id: `llm-empty-${n.id}`,
             severity: 'warning',
             nodeId: n.id,
-            title: 'Tell this LLM Response step what to do',
-            detail: 'Without a persona or instructions it can only give a generic reply.',
+            title: `Tell this ${NODE_META.llm.label} step what to do`,
+            detail: 'Without knowing who is replying or what to do, it can only send a general reply.',
           })
         }
         break
@@ -117,26 +111,28 @@ export function checkWorkflow(nodes: WorkflowNode[], edges: Edge[]): Issue[] {
             id: `cond-nobranches-${n.id}`,
             severity: 'warning',
             nodeId: n.id,
-            title: 'This Condition has no branches',
-            detail: 'Every message goes to “Otherwise”. Add a branch for what customers usually ask.',
+            title: `This ${NODE_META.condition.label} step has no paths`,
+            detail: 'Every message goes down “Otherwise”. Add a path for what customers usually ask.',
           })
         }
         n.data.branches.forEach((b, i) => {
-          const label = b.value.trim() ? `“${b.value.trim()}”` : `Branch ${i + 1}`
+          const label = b.value.trim()
+          ? `“${b.match === 'intent' ? intentLabel(b.value) : b.value.trim()}”`
+          : `Path ${i + 1}`
           if (!b.value.trim()) {
             issues.push({
               id: `cond-emptybranch-${b.id}`,
               severity: 'warning',
               nodeId: n.id,
               title: `${label} is empty`,
-              detail: 'A branch with no keyword or intent never matches. Fill it in or remove it.',
+              detail: 'An empty path never matches. Fill it in or remove it.',
             })
           } else if (!out(n.id, b.id)) {
             issues.push({
               id: `cond-branch-next-${b.id}`,
               severity: 'warning',
               nodeId: n.id,
-              title: `Branch ${label} isn’t connected`,
+              title: `Path ${label} isn’t connected`,
               detail: 'Customers who match it would only get the safety-net reply.',
               fix: { kind: 'addEnd', nodeId: n.id, handle: b.id, label: 'Add a reply step' },
             })
@@ -161,8 +157,8 @@ export function checkWorkflow(nodes: WorkflowNode[], edges: Edge[]): Issue[] {
             id: `quote-rubric-${n.id}`,
             severity: 'error',
             nodeId: n.id,
-            title: 'Choose a pricing rubric for this Quote step',
-            detail: 'The AI needs your rubric to price a photo. Pick one in the step settings.',
+            title: `Choose a pricing rubric for this ${NODE_META.quote.label} step`,
+            detail: 'The AI needs your pricing rubric to price a photo. Pick one in the step’s settings.',
           })
         }
         for (const [handle, label] of [
@@ -226,8 +222,8 @@ export function checkWorkflow(nodes: WorkflowNode[], edges: Edge[]): Issue[] {
       id: 'loop',
       severity: 'error',
       nodeId: loopAt,
-      title: 'Conditions loop back on each other',
-      detail: 'These steps would go round in circles without ever replying. Put a reply step inside the loop or remove a connection.',
+      title: `${NODE_META.condition.label} steps loop back on each other`,
+      detail: 'These steps would go round in circles without ever replying. Add a reply step inside the loop, or remove a connection.',
     })
   }
 

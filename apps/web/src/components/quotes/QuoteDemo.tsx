@@ -271,19 +271,20 @@ export default function QuoteDemo() {
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <label className="text-xs font-medium text-muted">Escalation Threshold</label>
+                  <label htmlFor="confidence-level" className="text-xs font-medium text-muted">Confidence level for sending quotes</label>
                   <span className={`text-sm font-mono font-bold ${confidenceColour(rubric.escalation_threshold)}`}>
                     {(rubric.escalation_threshold * 100).toFixed(0)}%
                   </span>
                 </div>
                 <input
+                  id="confidence-level"
                   type="range" min="0.3" max="0.9" step="0.05"
                   value={rubric.escalation_threshold}
                   onChange={(e) => setRubric({ ...rubric, escalation_threshold: parseFloat(e.target.value) })}
                   className="w-full accent-brand"
                 />
                 <p className="text-xs text-muted">
-                  If the model&apos;s confidence is below this, the job is escalated to a human agent.
+                  If the AI is less sure than this, the quote comes to you for review instead of going straight to the customer.
                 </p>
               </div>
             </div>

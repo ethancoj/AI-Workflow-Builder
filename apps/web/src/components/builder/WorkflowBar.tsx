@@ -146,7 +146,7 @@ export default function WorkflowBar() {
   }
 
   const buttonClass =
-    'rounded-lg border border-line bg-surface px-3 py-1.5 text-sm font-medium text-ink hover:bg-page focus-visible:ring-2 focus-visible:ring-brand disabled:opacity-50'
+    'rounded-lg border border-line bg-surface px-3 py-1.5 text-sm font-medium text-ink hover:bg-brand-soft hover:shadow-sm focus-visible:ring-2 focus-visible:ring-brand disabled:opacity-50 disabled:hover:bg-surface disabled:hover:shadow-none'
 
   return (
     <div className="flex flex-wrap items-center gap-2 border-b border-line bg-surface px-4 py-2.5 text-ink">
@@ -156,7 +156,7 @@ export default function WorkflowBar() {
         onChange={(e) => setWorkflowName(e.target.value)}
         placeholder={DEFAULT_WORKFLOW_NAME}
         aria-label="Workflow name"
-        className="w-56 rounded-lg border border-transparent bg-transparent px-2 py-1.5 text-base font-semibold text-ink hover:border-line focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+        className="w-56 rounded-lg border border-transparent bg-transparent px-2 py-1.5 text-base font-semibold text-ink hover:border-line hover:bg-brand-soft/60 focus:border-brand focus:bg-surface focus:outline-none focus:ring-2 focus:ring-brand/20"
       />
       <span className={`text-xs ${dirty ? 'font-medium text-highlight-ink' : 'text-muted'}`}>
         {dirty ? '● Unsaved changes' : workflowId ? 'All changes saved' : 'Not saved yet'}
@@ -204,7 +204,7 @@ export default function WorkflowBar() {
         <button
           onClick={() => save(false)}
           disabled={busy}
-          className="rounded-lg bg-brand px-4 py-1.5 text-sm font-semibold text-white hover:bg-brand/90 focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:opacity-60"
+          className="rounded-lg bg-brand px-4 py-1.5 text-sm font-semibold text-brand-on hover:bg-brand/80 hover:shadow-md focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:opacity-60"
         >
           {busy ? 'Working…' : 'Save'}
         </button>

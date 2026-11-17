@@ -112,7 +112,7 @@ export function ChecksButton() {
         <div
           role="dialog"
           aria-label="Workflow checks"
-          className="absolute right-0 z-50 mt-2 max-h-[70vh] w-[min(26rem,90vw)] overflow-y-auto rounded-[10px] border border-line bg-surface text-sm text-ink shadow-xl"
+          className="animate-pop absolute right-0 z-50 mt-2 max-h-[70vh] w-[min(26rem,90vw)] overflow-y-auto rounded-[10px] border border-line bg-surface text-sm text-ink shadow-xl"
         >
           <header className="border-b border-divider px-4 py-3">
             <h2 className="font-semibold">Workflow checks</h2>
@@ -138,7 +138,7 @@ export function ChecksButton() {
                       {issue.fix && (
                         <button
                           onClick={() => applyFix(issue.fix!)}
-                          className="rounded-md bg-brand px-2.5 py-1 text-xs font-medium text-brand-on hover:bg-brand/85 focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1"
+                          className="rounded-md bg-brand px-2.5 py-1 text-xs font-medium text-brand-on hover:bg-brand/80 focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1"
                         >
                           {issue.fix.label}
                         </button>
